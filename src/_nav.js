@@ -9,6 +9,8 @@ import {
   cilBalanceScale, // balance
   cilFile,         // reportes
   cilFactory,      // producción
+  cilBuilding,
+  cilBasket
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -23,12 +25,25 @@ const _nav = [
     component: CNavTitle,
     name: 'Módulos Contables',
   },
+    {
+    component: CNavItem,
+    name: 'Proveedores',
+    to: '/proveedores',
+    icon: <CIcon icon={cilBuilding} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Productos',
+    to: '/productos',
+    icon: <CIcon icon={cilBasket} customClassName="nav-icon" />,
+  },
   {
     component: CNavItem,
     name: 'Compras',
     to: '/compras',
     icon: <CIcon icon={cilCart} customClassName="nav-icon" />,
   },
+ 
   {
     component: CNavItem,
     name: 'Ventas',

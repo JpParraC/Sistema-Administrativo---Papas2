@@ -40,7 +40,7 @@ const AppHeader = () => {
           className="d-none d-md-inline-block"
           style={{ color: '#FC4A1A', fontWeight: 500, fontStyle: 'italic', fontSize: 16, letterSpacing: 1 }}
         >
-          ...Para un futuro más productivo
+          ...DONDE LA AGRICULTURA SE VUELVE INTELIGENTE.
         </span>
         <CHeaderNav className="d-none d-md-flex"></CHeaderNav>
         <CHeaderNav className="ms-auto"></CHeaderNav>

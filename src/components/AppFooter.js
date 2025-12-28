@@ -6,7 +6,6 @@ const AppFooter = () => {
     <CFooter className="px-4">
       <div>
         <span>
-          &copy; 2025 Culinary School. All rights reserved.
         </span>
       </div>
 

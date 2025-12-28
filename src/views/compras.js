@@ -1,76 +1,30 @@
+// src/views/Compras.js
 import React, { useEffect, useState } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm, CFormInput,
-  CFormSelect, CBadge, CInputGroup, CInputGroupText
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CButton,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CModal,
+  CModalHeader,
+  CModalBody,
+  CModalFooter,
+  CForm,
+  CFormInput,
+  CFormSelect,
+  CBadge,
 } from '@coreui/react'
 
-// Simulación de datos (reemplaza con fetch a tu API real)
-const proveedoresMock = [
-  { id: 1, nombre: 'Proveedor A' },
-  { id: 2, nombre: 'Proveedor B' },
-]
-
-const productosMock = [
-  { id: 1, nombre: 'Papa Negra' },
-  { id: 2, nombre: 'Papa Blanca' },
-  { id: 3, nombre: 'Papa Criolla' },
-]
-
-const comprasMock = [
-  {
-    id: 1,
-    proveedor_id: 1,
-    proveedor: 'Proveedor A',
-    fecha_compra: '2025-07-07 10:00',
-    total_compra: 1500.50,
-    estado_compra: 'Pagada',
-    detalle: [
-      {
-        id: 1,
-        compra_id: 1,
-        producto_id: 1,
-        producto: 'Papa Negra',
-        cantidad: 10,
-        precio_unitario_compra: 100,
-        subtotal: 1000
-      },
-      {
-        id: 2,
-        compra_id: 1,
-        producto_id: 2,
-        producto: 'Papa Blanca',
-        cantidad: 5,
-        precio_unitario_compra: 100.1,
-        subtotal: 500.5
-      }
-    ]
-  },
-  {
-    id: 2,
-    proveedor_id: 2,
-    proveedor: 'Proveedor B',
-    fecha_compra: '2025-07-06 15:30',
-    total_compra: 800.00,
-    estado_compra: 'Pendiente',
-    detalle: [
-      {
-        id: 3,
-        compra_id: 2,
-        producto_id: 3,
-        producto: 'Papa Criolla',
-        cantidad: 8,
-        precio_unitario_compra: 100,
-        subtotal: 800
-      }
-    ]
-  }
-]
-
 const estadoColors = {
-  'Pendiente': 'warning',
-  'Pagada': 'success',
-  'Anulada': 'danger'
+  Pendiente: 'warning',
+  Pagada: 'success',
+  Anulada: 'danger',
 }
 
 const Compras = () => {
@@ -78,249 +32,365 @@ const Compras = () => {
   const [proveedores, setProveedores] = useState([])
   const [productos, setProductos] = useState([])
   const [visible, setVisible] = useState(false)
+  const [editVisible, setEditVisible] = useState(false)
   const [visibleDetalle, setVisibleDetalle] = useState(false)
-  const [detalleSeleccionado, setDetalleSeleccionado] = useState([])
-  const [form, setForm] = useState({
-    proveedor_id: '',
-    fecha_compra: '',
-    total_compra: '',
-    estado_compra: 'Pendiente'
-  })
   const [detalleCompra, setDetalleCompra] = useState([])
+  const [detalleReal, setDetalleReal] = useState([])
+  const [form, setForm] = useState({ proveedor_id: '', estado_compra: 'Pendiente' })
+  const [selectedCompra, setSelectedCompra] = useState(null)
+  const [deleteVisible, setDeleteVisible] = useState(false)
+  const [compraToDelete, setCompraToDelete] = useState(null)
+  const [totalCompra, setTotalCompra] = useState(0)
 
-  // Filtros
-  const [filtroProveedor, setFiltroProveedor] = useState('')
-  const [filtroEstado, setFiltroEstado] = useState('')
-  const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
-  const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
+  const API_PROVEEDORES = 'http://localhost:4000/api/proveedores'
+  const API_COMPRAS = 'http://localhost:4000/api/compras'
+  const API_PRODUCTOS = 'http://localhost:4000/api/productos'
 
+  // ================== FETCH DATA ==================
   useEffect(() => {
-    setCompras(comprasMock)
-    setProveedores(proveedoresMock)
-    setProductos(productosMock)
+    const fetchProveedores = async () => {
+      try {
+        const res = await fetch(API_PROVEEDORES)
+        const data = await res.json()
+        setProveedores(
+          data.map((p) => ({ id: p.tma_idprove, nombre: p.tma_nombrep, rif: p.tma_rif })),
+        )
+      } catch (error) {
+        console.error('Error fetch proveedores:', error)
+      }
+    }
+
+    const fetchProductos = async () => {
+      try {
+        const res = await fetch(API_PRODUCTOS)
+        const data = await res.json()
+        const productosFiltrados = data.filter((p) => p.tma_tipo?.toLowerCase() === 'insumo')
+        setProductos(
+          productosFiltrados.map((p) => ({
+            id: p.tma_idprodu,
+            nombre: p.tma_nombrep,
+            unidad: p.tma_unidade,
+            precio: Number(p.tma_preciou),
+          })),
+        )
+      } catch (error) {
+        console.error('Error fetch productos:', error)
+      }
+    }
+
+    const fetchCompras = async () => {
+      try {
+        const res = await fetch(API_COMPRAS)
+        const data = await res.json()
+        const comprasArray = Array.isArray(data) ? data : []
+        setCompras(
+          comprasArray.map((c) => ({
+            id: c.tb_idcompra ?? 0,
+            proveedor_id: c.tb_idproveed ?? 0,
+            fecha_compra: c.tb_fechcomp ?? '',
+            total_compra: Number(c.tb_totalcom ?? 0),
+            estado_compra: c.tb_estadcom ?? 'Pendiente',
+          })),
+        )
+      } catch (error) {
+        console.error('Error fetch compras:', error)
+        setCompras([])
+      }
+    }
+
+    fetchProveedores()
+    fetchProductos()
+    fetchCompras()
   }, [])
 
-  const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  useEffect(() => {
+    const total = detalleCompra.reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
+    setTotalCompra(total)
+  }, [detalleCompra])
 
-  // Detalle de compra handlers
+  // ================== FORM HANDLERS ==================
+  const handleInputChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
   const handleDetalleChange = (idx, field, value) => {
-    const updated = detalleCompra.map((item, i) =>
-      i === idx
-        ? {
-            ...item,
-            [field]: value,
-            subtotal:
-              field === 'cantidad' || field === 'precio_unitario_compra'
-                ? (field === 'cantidad'
-                    ? value
-                    : item.cantidad || 0) *
-                  (field === 'precio_unitario_compra'
-                    ? value
-                    : item.precio_unitario_compra || 0)
-                : item.subtotal
-          }
-        : item
-    )
+    const updated = detalleCompra.map((item, i) => {
+      if (i !== idx) return item
+      let updatedItem = { ...item, [field]: value }
+
+      if (field === 'producto_id') {
+        const prod = productos.find((p) => p.id === Number(value))
+        if (prod) {
+          updatedItem.precio_unitario_compra = prod.precio
+          updatedItem.unidad = prod.unidad
+        } else {
+          updatedItem.precio_unitario_compra = 0
+          updatedItem.unidad = ''
+        }
+      }
+
+      const cantidad = Number(updatedItem.cantidad) || 0
+      const precio = Number(updatedItem.precio_unitario_compra) || 0
+      updatedItem.subtotal = cantidad * precio
+
+      return updatedItem
+    })
     setDetalleCompra(updated)
   }
 
   const handleAddDetalle = () => {
     setDetalleCompra([
       ...detalleCompra,
-      {
-        producto_id: '',
-        cantidad: '',
-        precio_unitario_compra: '',
-        subtotal: 0
-      }
+      { producto_id: '', cantidad: 1, precio_unitario_compra: 0, unidad: '', subtotal: 0 },
     ])
   }
 
-  const handleRemoveDetalle = (idx) => {
-    setDetalleCompra(detalleCompra.filter((_, i) => i !== idx))
-  }
+  const handleRemoveDetalle = (idx) => setDetalleCompra(detalleCompra.filter((_, i) => i !== idx))
 
-  const calcularTotal = () => {
-    return detalleCompra.reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
-  }
-
-  const handleAddCompra = (e) => {
+  // ================== CREAR COMPRA ==================
+  const handleAddCompra = async (e) => {
     e.preventDefault()
-    const proveedor = proveedores.find(p => p.id === parseInt(form.proveedor_id))
-    // Armar detalle con nombres de producto
-    const detalleConNombres = detalleCompra.map((d, idx) => {
-      const prod = productos.find(p => p.id === parseInt(d.producto_id))
-      return {
-        id: idx + 1,
-        compra_id: compras.length + 1,
-        producto_id: parseInt(d.producto_id),
-        producto: prod ? prod.nombre : '',
-        cantidad: parseInt(d.cantidad),
-        precio_unitario_compra: parseFloat(d.precio_unitario_compra),
-        subtotal: parseFloat(d.subtotal)
-      }
-    })
-    setCompras([
-      ...compras,
-      {
-        id: compras.length + 1,
-        proveedor_id: parseInt(form.proveedor_id),
-        proveedor: proveedor ? proveedor.nombre : '',
-        fecha_compra: form.fecha_compra,
-        total_compra: calcularTotal(),
-        estado_compra: form.estado_compra,
-        detalle: detalleConNombres
-      }
-    ])
-    setVisible(false)
-    setForm({
-      proveedor_id: '',
-      fecha_compra: '',
-      total_compra: '',
-      estado_compra: 'Pendiente'
-    })
-    setDetalleCompra([])
+    if (detalleCompra.length === 0) {
+      alert('Agrega al menos un producto')
+      return
+    }
+
+    const now = new Date()
+    const fechaHora = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
+      2,
+      '0',
+    )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+
+    const payload = {
+      idProveedor: Number(form.proveedor_id),
+      estado: form.estado_compra,
+      tb_detalle: detalleCompra.map((d) => ({
+        producto_id: d.producto_id,
+        cantidad: d.cantidad,
+        precio_unitario_compra: d.precio_unitario_compra,
+        subtotal: d.subtotal,
+      })),
+      tb_totalcom: totalCompra,
+      tb_fechcomp: fechaHora,
+    }
+
+    try {
+      await fetch(API_COMPRAS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      await fetchCompras()
+      setVisible(false)
+      setForm({ proveedor_id: '', estado_compra: 'Pendiente' })
+      setDetalleCompra([])
+    } catch (error) {
+      console.error('Error crear compra:', error)
+    }
   }
 
-  // Filtro creativo y funcional
-  const comprasFiltradas = compras.filter((compra) => {
-    const matchProveedor = filtroProveedor ? compra.proveedor_id === parseInt(filtroProveedor) : true
-    const matchEstado = filtroEstado ? compra.estado_compra === filtroEstado : true
-    const fechaCompra = compra.fecha_compra.slice(0, 10)
-    const matchFechaDesde = filtroFechaDesde ? fechaCompra >= filtroFechaDesde : true
-    const matchFechaHasta = filtroFechaHasta ? fechaCompra <= filtroFechaHasta : true
-    return matchProveedor && matchEstado && matchFechaDesde && matchFechaHasta
-  })
+  // ================== EDITAR COMPRA ==================
+  const handleEditCompra = async (compra) => {
+    setSelectedCompra(compra)
+    setForm({
+      proveedor_id: compra.proveedor_id,
+      estado_compra: compra.estado_compra,
+    })
+
+    try {
+      const res = await fetch(`${API_COMPRAS}/${compra.id}/detalle`)
+      const data = await res.json()
+
+      const detalleMapeado = data.map((item) => ({
+        producto_id: item.producto_id,
+        cantidad: Number(item.tb_cantidad),
+        precio_unitario_compra: Number(item.tb_precunic),
+        subtotal: Number(item.tb_subtotal),
+        unidad: item.unidad || '',
+      }))
+
+      setDetalleCompra(detalleMapeado)
+      setEditVisible(true)
+    } catch (error) {
+      console.error('Error cargando detalle para editar:', error)
+    }
+  }
+
+  const handleUpdateCompra = async (e) => {
+    e.preventDefault()
+    if (!selectedCompra) return
+
+    const payload = {
+      idProveedor: Number(form.proveedor_id),
+      estado: form.estado_compra,
+      tb_detalle: detalleCompra.map((d) => ({
+        producto_id: d.producto_id,
+        cantidad: d.cantidad,
+        precio_unitario_compra: d.precio_unitario_compra,
+        subtotal: d.subtotal,
+      })),
+      tb_totalcom: detalleCompra.reduce((acc, item) => acc + Number(item.subtotal || 0), 0),
+    }
+
+    try {
+      const res = await fetch(`${API_COMPRAS}/${selectedCompra.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const updatedCompra = await res.json()
+      setCompras(
+        compras.map((c) => (c.id === updatedCompra.tb_idcompra ? updatedCompra : c)),
+      )
+      setEditVisible(false)
+      setSelectedCompra(null)
+      setForm({ proveedor_id: '', estado_compra: 'Pendiente' })
+      setDetalleCompra([])
+    } catch (error) {
+      console.error('Error actualizando compra:', error)
+    }
+  }
+
+  // ================== ELIMINAR COMPRA ==================
+  const handleShowDeleteModal = (compra) => {
+    setCompraToDelete(compra)
+    setDeleteVisible(true)
+  }
+
+  const confirmDeleteCompra = async () => {
+    if (!compraToDelete) return
+    try {
+      await fetch(`${API_COMPRAS}/${compraToDelete.id}`, { method: 'DELETE' })
+      setCompras(compras.filter((c) => c.id !== compraToDelete.id))
+      setDeleteVisible(false)
+      setCompraToDelete(null)
+    } catch (error) {
+      console.error('Error eliminar compra:', error)
+    }
+  }
+
+  // ================== DETALLE REAL ==================
+  const fetchDetalleCompra = async (id) => {
+    try {
+      const res = await fetch(`${API_COMPRAS}/${id}/detalle`)
+      const data = await res.json()
+      setDetalleReal(data)
+      setVisibleDetalle(true)
+    } catch (error) {
+      console.error('Error fetch detalle compra:', error)
+      setDetalleReal([])
+    }
+  }
+
+  const getProveedorNombre = (id) => {
+    const prov = proveedores.find((p) => p.id === id)
+    return prov ? `${prov.nombre} (${prov.rif})` : 'Desconocido'
+  }
+
+  const formatFechaHora = (fechaISO) => {
+    if (!fechaISO) return ''
+    const date = new Date(fechaISO)
+    const dia = String(date.getDate()).padStart(2, '0')
+    const mes = String(date.getMonth() + 1).padStart(2, '0')
+    const anio = date.getFullYear()
+    const horas = String(date.getHours()).padStart(2, '0')
+    const minutos = String(date.getMinutes()).padStart(2, '0')
+    const segundos = String(date.getSeconds()).padStart(2, '0')
+    return `${dia}/${mes}/${anio} ${horas}:${minutos}:${segundos}`
+  }
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #E6EBE0 60%, #9BC1BC 100%)', border: 'none', boxShadow: '0 2px 16px 0 #9BC1BC33' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#ED6A5A', color: '#fff' }}>
-        <h5 className="mb-0" style={{ letterSpacing: 1 }}>Compras</h5>
-        <CButton color="light" style={{ color: '#ED6A5A', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
-          + Nueva Compra
-        </CButton>
-      </CCardHeader>
-      <CCardBody>
-        {/* Filtros */}
-        <div className="mb-4 d-flex flex-wrap gap-2 align-items-end" style={{ background: '#F4F1BB', borderRadius: 8, padding: 12 }}>
-          <CFormSelect
-            size="sm"
-            style={{ maxWidth: 180 }}
-            label="Proveedor"
-            value={filtroProveedor}
-            onChange={e => setFiltroProveedor(e.target.value)}
-          >
-            <option value="">Todos los proveedores</option>
-            {proveedores.map((p) => (
-              <option key={p.id} value={p.id}>{p.nombre}</option>
-            ))}
-          </CFormSelect>
-          <CFormSelect
-            size="sm"
-            style={{ maxWidth: 150 }}
-            label="Estado"
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            <option>Pendiente</option>
-            <option>Pagada</option>
-            <option>Anulada</option>
-          </CFormSelect>
-          <CInputGroup size="sm" style={{ maxWidth: 500 }}>
-            <CInputGroupText>Desde</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaDesde}
-              onChange={e => setFiltroFechaDesde(e.target.value)}
-            />
-            <CInputGroupText>Hasta</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaHasta}
-              onChange={e => setFiltroFechaHasta(e.target.value)}
-            />
-          </CInputGroup>
-          {(filtroProveedor || filtroEstado || filtroFechaDesde || filtroFechaHasta) && (
-            <CButton color="secondary" size="sm" variant="outline" onClick={() => {
-              setFiltroProveedor('')
-              setFiltroEstado('')
-              setFiltroFechaDesde('')
-              setFiltroFechaHasta('')
-            }}>
-              Limpiar filtros
-            </CButton>
-          )}
-        </div>
-        {/* Tabla */}
-        <CTable hover responsive bordered align="middle" className="shadow-sm" style={{ background: '#fff', borderRadius: 8 }}>
-          <CTableHead color="light">
-            <CTableRow>
-              <CTableHeaderCell>#</CTableHeaderCell>
-              <CTableHeaderCell>Proveedor</CTableHeaderCell>
-              <CTableHeaderCell>Fecha</CTableHeaderCell>
-              <CTableHeaderCell>Total</CTableHeaderCell>
-              <CTableHeaderCell>Estado</CTableHeaderCell>
-              <CTableHeaderCell>Detalle</CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {comprasFiltradas.length === 0 && (
-              <CTableRow>
-                <CTableDataCell colSpan={6} className="text-center text-muted">
-                  No hay compras registradas con los filtros seleccionados.
-                </CTableDataCell>
-              </CTableRow>
-            )}
-            {comprasFiltradas.map((compra) => (
-              <CTableRow key={compra.id}>
-                <CTableDataCell>{compra.id}</CTableDataCell>
-                <CTableDataCell>
-                  <CBadge color="info" style={{ fontSize: 13, background: '#36C9C6', color: '#fff' }}>
-                    {compra.proveedor}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ fontFamily: 'monospace', color: '#6c757d' }}>
-                    {compra.fecha_compra}
-                  </span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#ED6A5A', fontWeight: 600 }}>${compra.total_compra.toFixed(2)}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CBadge color={estadoColors[compra.estado_compra] || 'secondary'}>
-                    {compra.estado_compra}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CButton
-                    color="info"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setDetalleSeleccionado(compra.detalle || [])
-                      setVisibleDetalle(true)
-                    }}
-                  >
-                    Ver Detalle
-                  </CButton>
-                </CTableDataCell>
-              </CTableRow>
-            ))}
-          </CTableBody>
-        </CTable>
-      </CCardBody>
+    <>
+      {/* CARD PRINCIPAL */}
+      <CCard>
+        <CCardHeader className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Compras</h5>
+          <CButton color="primary" onClick={() => setVisible(true)}>
+            + Nueva Compra
+          </CButton>
+        </CCardHeader>
 
-      {/* Modal para nueva compra */}
+        <CCardBody>
+          <CTable bordered hover responsive>
+            <CTableHead color="light">
+              <CTableRow>
+                <CTableHeaderCell>#</CTableHeaderCell>
+                <CTableHeaderCell>Proveedor</CTableHeaderCell>
+                <CTableHeaderCell>Fecha</CTableHeaderCell>
+                <CTableHeaderCell>Total</CTableHeaderCell>
+                <CTableHeaderCell>Estado</CTableHeaderCell>
+                <CTableHeaderCell>Acciones</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {compras.map((compra) => (
+                <CTableRow key={compra.id}>
+                  <CTableDataCell>{compra.id}</CTableDataCell>
+                  <CTableDataCell>{getProveedorNombre(compra.proveedor_id)}</CTableDataCell>
+                  <CTableDataCell>{formatFechaHora(compra.fecha_compra)}</CTableDataCell>
+                  <CTableDataCell>${compra.total_compra.toFixed(2)}</CTableDataCell>
+                  <CTableDataCell>
+                    <CBadge color={estadoColors[compra.estado_compra]}>
+                      {compra.estado_compra}
+                    </CBadge>
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <CButton
+                      size="sm"
+                      color="info"
+                      onClick={() => fetchDetalleCompra(compra.id)}
+                    >
+                      Ver
+                    </CButton>{' '}
+                    <CButton size="sm" color="warning" onClick={() => handleEditCompra(compra)}>
+                      Editar
+                    </CButton>{' '}
+                    <CButton
+                      size="sm"
+                      color="danger"
+                      onClick={() => handleShowDeleteModal(compra)}
+                    >
+                      Eliminar
+                    </CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      {/* MODALES */}
+      {/* --- Eliminar --- */}
+      <CModal visible={deleteVisible} onClose={() => setDeleteVisible(false)} size="sm">
+        <CModalHeader>
+          <strong>Confirmar Eliminación</strong>
+        </CModalHeader>
+        <CModalBody className="text-center">
+          <p>
+            ¿Estás seguro de eliminar la compra <strong>#{compraToDelete?.id}</strong> del
+            proveedor <strong>{getProveedorNombre(compraToDelete?.proveedor_id)}</strong>?
+          </p>
+        </CModalBody>
+        <CModalFooter className="d-flex justify-content-center">
+          <CButton color="danger" onClick={confirmDeleteCompra}>
+            Sí, eliminar
+          </CButton>
+          <CButton color="secondary" onClick={() => setDeleteVisible(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* --- Nueva Compra --- */}
       <CModal visible={visible} onClose={() => setVisible(false)} size="lg">
-        <CModalHeader style={{ background: '#ED6A5A', color: '#fff' }}>
+        <CModalHeader>
           <strong>Nueva Compra</strong>
         </CModalHeader>
-        <CForm onSubmit={handleAddCompra}>
-          <CModalBody>
+        <CModalBody>
+          <CForm onSubmit={handleAddCompra}>
             <CFormSelect
               label="Proveedor"
               name="proveedor_id"
@@ -328,130 +398,103 @@ const Compras = () => {
               onChange={handleInputChange}
               required
             >
-              <option value="">Seleccione proveedor</option>
+              <option value="">Selecciona un proveedor</option>
               {proveedores.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
+                <option key={p.id} value={p.id}>
+                  {p.nombre} ({p.rif})
+                </option>
               ))}
             </CFormSelect>
-            <CFormInput
-              className="mt-2"
-              type="datetime-local"
-              label="Fecha de compra"
-              name="fecha_compra"
-              value={form.fecha_compra}
-              onChange={handleInputChange}
-              required
-            />
-            <div className="mt-4 mb-2">
-              <strong>Detalle de la compra</strong>
-              <CButton color="success" size="sm" className="ms-2" onClick={handleAddDetalle}>
-                + Agregar producto
-              </CButton>
-            </div>
-            <CTable bordered small>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell>Producto</CTableHeaderCell>
-                  <CTableHeaderCell>Cantidad</CTableHeaderCell>
-                  <CTableHeaderCell>Precio Unitario</CTableHeaderCell>
-                  <CTableHeaderCell>Subtotal</CTableHeaderCell>
-                  <CTableHeaderCell></CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {detalleCompra.length === 0 && (
-                  <CTableRow>
-                    <CTableDataCell colSpan={5} className="text-center text-muted">
-                      Agregue productos a la compra.
-                    </CTableDataCell>
-                  </CTableRow>
-                )}
-                {detalleCompra.map((item, idx) => (
-                  <CTableRow key={idx}>
-                    <CTableDataCell>
-                      <CFormSelect
-                        size="sm"
-                        value={item.producto_id}
-                        onChange={e => handleDetalleChange(idx, 'producto_id', e.target.value)}
-                        required
-                      >
-                        <option value="">Seleccione producto</option>
-                        {productos.map((p) => (
-                          <option key={p.id} value={p.id}>{p.nombre}</option>
-                        ))}
-                      </CFormSelect>
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <CFormInput
-                        size="sm"
-                        type="number"
-                        min={1}
-                        value={item.cantidad}
-                        onChange={e => handleDetalleChange(idx, 'cantidad', parseInt(e.target.value) || '')}
-                        required
-                      />
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <CFormInput
-                        size="sm"
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={item.precio_unitario_compra}
-                        onChange={e => handleDetalleChange(idx, 'precio_unitario_compra', parseFloat(e.target.value) || '')}
-                        required
-                      />
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <span style={{ color: '#ED6A5A', fontWeight: 600 }}>
-                        ${item.subtotal ? Number(item.subtotal).toFixed(2) : '0.00'}
-                      </span>
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <CButton color="danger" size="sm" variant="outline" onClick={() => handleRemoveDetalle(idx)}>
-                        Quitar
-                      </CButton>
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
-            <div className="text-end mt-2">
-              <strong>Total: </strong>
-              <span style={{ color: '#36C9C6', fontWeight: 700, fontSize: 18 }}>
-                ${calcularTotal().toFixed(2)}
-              </span>
-            </div>
+
+            <h6 className="mt-3">Detalle de Productos</h6>
+            {detalleCompra.map((item, idx) => (
+              <div
+                key={idx}
+                className="d-flex flex-column flex-md-row gap-2 align-items-end mb-2"
+              >
+                <CFormSelect
+                  value={item.producto_id}
+                  onChange={(e) => handleDetalleChange(idx, 'producto_id', e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona un producto</option>
+                  {productos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre} - ${p.precio}
+                    </option>
+                  ))}
+                </CFormSelect>
+
+                <CFormInput
+                  type="number"
+                  placeholder="Cantidad"
+                  value={item.cantidad}
+                  onChange={(e) => handleDetalleChange(idx, 'cantidad', e.target.value)}
+                  min="1"
+                  required
+                />
+
+                <CFormInput type="text" placeholder="Unidad" value={item.unidad} readOnly />
+                <CFormInput
+                  type="number"
+                  placeholder="Precio Unitario"
+                  value={item.precio_unitario_compra}
+                  readOnly
+                />
+                <CFormInput type="number" placeholder="Subtotal" value={item.subtotal} readOnly />
+
+                <CButton
+                  type="button"
+                  size="sm"
+                  color="danger"
+                  onClick={() => handleRemoveDetalle(idx)}
+                >
+                  Eliminar
+                </CButton>
+              </div>
+            ))}
+
+            <CButton color="secondary" type="button" onClick={handleAddDetalle}>
+              + Agregar Producto
+            </CButton>
+
+            <h6 className="mt-3">Total: ${totalCompra.toFixed(2)}</h6>
+
             <CFormSelect
-              className="mt-2"
-              label="Estado"
+              label="Estado de la Compra"
               name="estado_compra"
               value={form.estado_compra}
               onChange={handleInputChange}
               required
             >
-              <option>Pendiente</option>
-              <option>Pagada</option>
-              <option>Anulada</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Pagada">Pagada</option>
+              <option value="Anulada">Anulada</option>
             </CFormSelect>
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={() => setVisible(false)}>
-              Cancelar
+
+            <CButton color="primary" type="submit" className="mt-3">
+              Guardar Compra
             </CButton>
-            <CButton color="primary" type="submit" disabled={detalleCompra.length === 0}>
-              Guardar
-            </CButton>
-          </CModalFooter>
-        </CForm>
+          </CForm>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisible(false)}>
+            Cancelar
+          </CButton>
+        </CModalFooter>
       </CModal>
 
-      {/* Modal Detalle Compra */}
-      <CModal visible={visibleDetalle} onClose={() => setVisibleDetalle(false)}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
-          <strong>Detalle de la Compra</strong>
+      {/* --- Detalle --- */}
+      <CModal visible={visibleDetalle} onClose={() => setVisibleDetalle(false)} size="lg">
+        <CModalHeader>
+          <strong>Detalle de Compra</strong>
         </CModalHeader>
         <CModalBody>
+          <h5 className="text-start mb-3">
+            Total: $
+            {detalleReal.reduce((acc, item) => acc + Number(item.tb_subtotal || 0), 0).toFixed(2)}
+          </h5>
+
           <CTable bordered small>
             <CTableHead>
               <CTableRow>
@@ -462,31 +505,118 @@ const Compras = () => {
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {detalleSeleccionado.length === 0 && (
-                <CTableRow>
-                  <CTableDataCell colSpan={4} className="text-center text-muted">
-                    Sin productos en esta compra.
-                  </CTableDataCell>
-                </CTableRow>
-              )}
-              {detalleSeleccionado.map((item, idx) => (
+              {detalleReal.map((item, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>{item.producto}</CTableDataCell>
-                  <CTableDataCell>{item.cantidad}</CTableDataCell>
-                  <CTableDataCell>${Number(item.precio_unitario_compra).toFixed(2)}</CTableDataCell>
-                  <CTableDataCell>${Number(item.subtotal).toFixed(2)}</CTableDataCell>
+                  <CTableDataCell>{item.nombre_producto}</CTableDataCell>
+                  <CTableDataCell>{item.tb_cantidad}</CTableDataCell>
+                  <CTableDataCell>${item.tb_precunic}</CTableDataCell>
+                  <CTableDataCell>${item.tb_subtotal}</CTableDataCell>
                 </CTableRow>
               ))}
             </CTableBody>
           </CTable>
         </CModalBody>
+      </CModal>
+
+      {/* --- Editar Compra --- */}
+      <CModal visible={editVisible} onClose={() => setEditVisible(false)} size="lg">
+        <CModalHeader>
+          <strong>Editar Compra #{selectedCompra?.id}</strong>
+        </CModalHeader>
+        <CModalBody>
+          <CForm onSubmit={handleUpdateCompra}>
+            <CFormSelect
+              label="Proveedor"
+              name="proveedor_id"
+              value={form.proveedor_id}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Selecciona un proveedor</option>
+              {proveedores.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre} ({p.rif})
+                </option>
+              ))}
+            </CFormSelect>
+
+            <h6 className="mt-3">Detalle de Productos</h6>
+            {detalleCompra.map((item, idx) => (
+              <div
+                key={idx}
+                className="d-flex flex-column flex-md-row gap-2 align-items-end mb-2"
+              >
+                <CFormSelect
+                  value={item.producto_id}
+                  onChange={(e) => handleDetalleChange(idx, 'producto_id', e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona un producto</option>
+                  {productos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre} - ${p.precio}
+                    </option>
+                  ))}
+                </CFormSelect>
+
+                <CFormInput
+                  type="number"
+                  placeholder="Cantidad"
+                  value={item.cantidad}
+                  onChange={(e) => handleDetalleChange(idx, 'cantidad', e.target.value)}
+                  min="1"
+                  required
+                />
+                <CFormInput type="text" placeholder="Unidad" value={item.unidad} readOnly />
+                <CFormInput
+                  type="number"
+                  placeholder="Precio Unitario"
+                  value={item.precio_unitario_compra}
+                  readOnly
+                />
+                <CFormInput type="number" placeholder="Subtotal" value={item.subtotal} readOnly />
+
+                <CButton
+                  type="button"
+                  size="sm"
+                  color="danger"
+                  onClick={() => handleRemoveDetalle(idx)}
+                >
+                  Eliminar
+                </CButton>
+              </div>
+            ))}
+
+            <CButton color="secondary" type="button" onClick={handleAddDetalle}>
+              + Agregar Producto
+            </CButton>
+
+            <h6 className="mt-3">Total: ${totalCompra.toFixed(2)}</h6>
+
+            <CFormSelect
+              label="Estado de la Compra"
+              name="estado_compra"
+              value={form.estado_compra}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="Pendiente">Pendiente</option>
+              <option value="Pagada">Pagada</option>
+              <option value="Anulada">Anulada</option>
+            </CFormSelect>
+
+            <CButton color="primary" type="submit" className="mt-3">
+              Guardar Cambios
+            </CButton>
+          </CForm>
+        </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisibleDetalle(false)}>
-            Cerrar
+          <CButton color="secondary" onClick={() => setEditVisible(false)}>
+            Cancelar
           </CButton>
         </CModalFooter>
       </CModal>
-    </CCard>
+    </>
   )
 }
 
