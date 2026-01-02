@@ -612,7 +612,7 @@ const Compras = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setEditVisible(false)}>
-            Cancelar
+            Cancelarr
           </CButton>
         </CModalFooter>
       </CModal>
