@@ -1,216 +1,134 @@
 import React, { useEffect, useState } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm, CFormInput,
-  CBadge, CInputGroup, CInputGroupText, CFormSelect
+  CCard, CCardHeader, CCardBody, CButton,
+  CTable, CTableHead, CTableRow, CTableHeaderCell,
+  CTableBody, CTableDataCell,
+  CModal, CModalHeader, CModalBody, CModalFooter,
+  CForm, CFormInput, CFormSelect, CBadge
 } from '@coreui/react'
 
-// Simulación de datos (reemplaza con fetch a tu API real)
-const personalMock = [
-  {
-    id: 1,
-    nombre_empleado: 'Juan Pérez',
-    cargo: 'Supervisor de Siembra',
-    fecha_contratacion: '2023-03-15',
-    salario: 1800.00,
-    telefono: '3001234567',
-    email: 'juan.perez@email.com',
-    estado: 'Activo'
-  },
-  {
-    id: 2,
-    nombre_empleado: 'Ana Gómez',
-    cargo: 'Contadora',
-    fecha_contratacion: '2024-01-10',
-    salario: 2200.00,
-    telefono: '3009876543',
-    email: 'ana.gomez@email.com',
-    estado: 'Inactivo'
-  }
-]
+const API_URL = 'http://localhost:4000/api/personal'
 
 const estadosPersonal = ['Activo', 'Inactivo', 'Vacaciones', 'Suspendido']
 
 const Personal = () => {
+
+  // ======================
+  // STATES
+  // ======================
   const [personal, setPersonal] = useState([])
   const [visible, setVisible] = useState(false)
+  const [loading, setLoading] = useState(false)
+
   const [form, setForm] = useState({
-    nombre_empleado: '',
-    cargo: '',
-    fecha_contratacion: '',
-    salario: '',
-    telefono: '',
-    email: '',
-    estado: 'Activo'
+    tma_nombrep: '',
+    tma_cargope: '',
+    tma_fechcon: '',
+    tma_salario: '',
+    tma_telefon: '',
+    tma_emailpe: '',
+    tma_estadpe: 'Activo'
   })
 
-  // Filtros
-  const [filtroEstado, setFiltroEstado] = useState('')
-  const [filtroCargo, setFiltroCargo] = useState('')
-  const [filtroNombre, setFiltroNombre] = useState('')
-  const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
-  const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
+  // ======================
+  // FETCH PERSONAL
+  // ======================
+  const fetchPersonal = async () => {
+    try {
+      const res = await fetch(API_URL)
+      const data = await res.json()
+      setPersonal(data)
+    } catch (error) {
+      console.error('Error al cargar personal:', error)
+    }
+  }
 
   useEffect(() => {
-    setPersonal(personalMock)
+    fetchPersonal()
   }, [])
 
+  // ======================
+  // INPUT HANDLER
+  // ======================
   const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleAddPersonal = (e) => {
+  // ======================
+  // SUBMIT
+  // ======================
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setPersonal([
-      ...personal,
-      {
-        id: personal.length + 1,
-        ...form,
-        salario: parseFloat(form.salario)
-      }
-    ])
-    setVisible(false)
-    setForm({
-      nombre_empleado: '',
-      cargo: '',
-      fecha_contratacion: '',
-      salario: '',
-      telefono: '',
-      email: '',
-      estado: 'Activo'
-    })
-  }
+    setLoading(true)
 
-  // Filtro funcional y visualmente ordenado
-  const personalFiltrado = personal.filter((item) => {
-    const matchEstado = filtroEstado ? item.estado === filtroEstado : true
-    const matchCargo = filtroCargo ? item.cargo.toLowerCase().includes(filtroCargo.toLowerCase()) : true
-    const matchNombre = filtroNombre ? item.nombre_empleado.toLowerCase().includes(filtroNombre.toLowerCase()) : true
-    const matchFechaDesde = filtroFechaDesde ? item.fecha_contratacion >= filtroFechaDesde : true
-    const matchFechaHasta = filtroFechaHasta ? item.fecha_contratacion <= filtroFechaHasta : true
-    return matchEstado && matchCargo && matchNombre && matchFechaDesde && matchFechaHasta
-  })
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+
+      if (!res.ok) throw new Error('Error al guardar')
+
+      await fetchPersonal()
+      setVisible(false)
+
+      setForm({
+        tma_nombrep: '',
+        tma_cargope: '',
+        tma_fechcon: '',
+        tma_salario: '',
+        tma_telefon: '',
+        tma_emailpe: '',
+        tma_estadpe: 'Activo'
+      })
+    } catch (error) {
+      console.error(error)
+      alert('Error al guardar el empleado')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #F4F1BB 60%, #ED6A5A 100%)', border: 'none', boxShadow: '0 2px 16px 0 #ED6A5A33' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#36C9C6', color: '#fff' }}>
-        <h5 className="mb-0" style={{ letterSpacing: 1 }}>Personal</h5>
-        <CButton color="light" style={{ color: '#36C9C6', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
+    <CCard>
+      <CCardHeader className="d-flex justify-content-between align-items-center">
+        <h5>Personal</h5>
+        <CButton color="primary" onClick={() => setVisible(true)}>
           + Nuevo Empleado
         </CButton>
       </CCardHeader>
+
       <CCardBody>
-        {/* Filtros organizados */}
-        <div className="mb-4 d-flex flex-wrap gap-3 align-items-end" style={{ background: '#E6EBE0', borderRadius: 8, padding: 16 }}>
-          <CFormInput
-            size="sm"
-            style={{ maxWidth: 180 }}
-            label="Nombre"
-            placeholder="Buscar por nombre"
-            value={filtroNombre}
-            onChange={e => setFiltroNombre(e.target.value)}
-          />
-          <CFormInput
-            size="sm"
-            style={{ maxWidth: 160 }}
-            label="Cargo"
-            placeholder="Buscar por cargo"
-            value={filtroCargo}
-            onChange={e => setFiltroCargo(e.target.value)}
-          />
-          <CFormSelect
-            size="sm"
-            style={{ maxWidth: 150 }}
-            label="Estado"
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            {estadosPersonal.map((estado) => (
-              <option key={estado} value={estado}>{estado}</option>
-            ))}
-          </CFormSelect>
-          <CInputGroup size="sm" style={{ maxWidth: 400 }}>
-            <CInputGroupText>Desde</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaDesde}
-              onChange={e => setFiltroFechaDesde(e.target.value)}
-            />
-            <CInputGroupText>Hasta</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaHasta}
-              onChange={e => setFiltroFechaHasta(e.target.value)}
-            />
-          </CInputGroup>
-          {(filtroNombre || filtroCargo || filtroEstado || filtroFechaDesde || filtroFechaHasta) && (
-            <CButton color="secondary" size="sm" variant="outline" onClick={() => {
-              setFiltroNombre('')
-              setFiltroCargo('')
-              setFiltroEstado('')
-              setFiltroFechaDesde('')
-              setFiltroFechaHasta('')
-            }}>
-              Limpiar filtros
-            </CButton>
-          )}
-        </div>
-        {/* Tabla */}
-        <CTable hover responsive bordered align="middle" className="shadow-sm" style={{ background: '#fff', borderRadius: 8 }}>
-          <CTableHead color="light">
+        {/* TABLA */}
+        <CTable bordered hover responsive>
+          <CTableHead>
             <CTableRow>
               <CTableHeaderCell>#</CTableHeaderCell>
               <CTableHeaderCell>Nombre</CTableHeaderCell>
               <CTableHeaderCell>Cargo</CTableHeaderCell>
-              <CTableHeaderCell>Fecha Contratación</CTableHeaderCell>
+              <CTableHeaderCell>Fecha</CTableHeaderCell>
               <CTableHeaderCell>Salario</CTableHeaderCell>
               <CTableHeaderCell>Teléfono</CTableHeaderCell>
               <CTableHeaderCell>Email</CTableHeaderCell>
               <CTableHeaderCell>Estado</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
+
           <CTableBody>
-            {personalFiltrado.length === 0 && (
-              <CTableRow>
-                <CTableDataCell colSpan={8} className="text-center text-muted">
-                  No hay empleados registrados con los filtros seleccionados.
-                </CTableDataCell>
-              </CTableRow>
-            )}
-            {personalFiltrado.map((item) => (
-              <CTableRow key={item.id}>
-                <CTableDataCell>{item.id}</CTableDataCell>
+            {personal.map((p, i) => (
+              <CTableRow key={p.id}>
+                <CTableDataCell>{i + 1}</CTableDataCell>
+                <CTableDataCell>{p.tma_nombrep}</CTableDataCell>
+                <CTableDataCell>{p.tma_cargope}</CTableDataCell>
+                <CTableDataCell>{p.tma_fechcon}</CTableDataCell>
+                <CTableDataCell>${p.tma_salario}</CTableDataCell>
+                <CTableDataCell>{p.tma_telefon}</CTableDataCell>
+                <CTableDataCell>{p.tma_emailpe}</CTableDataCell>
                 <CTableDataCell>
-                  <CBadge color="info" style={{ fontSize: 13, background: '#ED6A5A', color: '#fff' }}>
-                    {item.nombre_empleado}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#36C9C6', fontWeight: 600 }}>{item.cargo}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ fontFamily: 'monospace', color: '#6c757d' }}>
-                    {item.fecha_contratacion}
-                  </span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#ED6A5A', fontWeight: 600 }}>${item.salario.toFixed(2)}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#222' }}>{item.telefono}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#222' }}>{item.email}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CBadge color={
-                    item.estado === 'Activo' ? 'success'
-                    : item.estado === 'Inactivo' ? 'secondary'
-                    : item.estado === 'Vacaciones' ? 'warning'
-                    : 'danger'
-                  }>
-                    {item.estado}
+                  <CBadge color={p.tma_estadpe === 'Activo' ? 'success' : 'secondary'}>
+                    {p.tma_estadpe}
                   </CBadge>
                 </CTableDataCell>
               </CTableRow>
@@ -219,83 +137,32 @@ const Personal = () => {
         </CTable>
       </CCardBody>
 
-      {/* Modal para nuevo empleado */}
+      {/* MODAL */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
-          <strong>Nuevo Empleado</strong>
-        </CModalHeader>
-        <CForm onSubmit={handleAddPersonal}>
+        <CModalHeader>Nuevo Empleado</CModalHeader>
+
+        <CForm onSubmit={handleSubmit}>
           <CModalBody>
-            <CFormInput
-              label="Nombre completo"
-              name="nombre_empleado"
-              value={form.nombre_empleado}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Cargo"
-              name="cargo"
-              value={form.cargo}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              type="date"
-              label="Fecha de contratación"
-              name="fecha_contratacion"
-              value={form.fecha_contratacion}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              type="number"
-              step="0.01"
-              label="Salario"
-              name="salario"
-              value={form.salario}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Teléfono"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              type="email"
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormSelect
-              className="mt-2"
-              label="Estado"
-              name="estado"
-              value={form.estado}
-              onChange={handleInputChange}
-              required
-            >
-              {estadosPersonal.map((estado) => (
-                <option key={estado} value={estado}>{estado}</option>
+            <CFormInput label="Nombre" name="tma_nombrep" value={form.tma_nombrep} onChange={handleInputChange} required />
+            <CFormInput label="Cargo" name="tma_cargope" value={form.tma_cargope} onChange={handleInputChange} required />
+            <CFormInput type="date" label="Fecha de Contrato" name="tma_fechcon" value={form.tma_fechcon} onChange={handleInputChange} required />
+            <CFormInput type="number" label="Salario" name="tma_salario" value={form.tma_salario} onChange={handleInputChange} required />
+            <CFormInput label="Teléfono" name="tma_telefon" value={form.tma_telefon} onChange={handleInputChange} required />
+            <CFormInput type="email" label="Email" name="tma_emailpe" value={form.tma_emailpe} onChange={handleInputChange} required />
+
+            <CFormSelect label="Estado" name="tma_estadpe" value={form.tma_estadpe} onChange={handleInputChange}>
+              {estadosPersonal.map(e => (
+                <option key={e} value={e}>{e}</option>
               ))}
             </CFormSelect>
           </CModalBody>
+
           <CModalFooter>
             <CButton color="secondary" onClick={() => setVisible(false)}>
               Cancelar
             </CButton>
-            <CButton color="primary" type="submit">
-              Guardar
+            <CButton color="primary" type="submit" disabled={loading}>
+              {loading ? 'Guardando...' : 'Guardar'}
             </CButton>
           </CModalFooter>
         </CForm>
