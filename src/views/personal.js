@@ -41,7 +41,7 @@ const Personal = () => {
     const data = await res.json()
     setPersonal(data)
   }
-
+ //hola
   const fetchCargos = async () => {
     const res = await fetch(API_CARGOS)
     const data = await res.json()

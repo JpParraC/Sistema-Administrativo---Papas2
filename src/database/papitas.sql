@@ -5,7 +5,7 @@
 -- Dumped from database version 17.0
 -- Dumped by pg_dump version 17.0
 
--- Started on 2026-01-02 16:24:37
+-- Started on 2026-01-03 02:21:26
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -53,11 +53,10 @@ CREATE SEQUENCE public.bdtma_cliente_tma_idclien_seq
     NO MAXVALUE
     CACHE 1;
 
-
 ALTER SEQUENCE public.bdtma_cliente_tma_idclien_seq OWNER TO postgres;
 
 --
--- TOC entry 5000 (class 0 OID 0)
+-- TOC entry 5012 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: bdtma_cliente_tma_idclien_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -101,7 +100,7 @@ CREATE SEQUENCE public.bdtma_personal_tma_idperso_seq
 ALTER SEQUENCE public.bdtma_personal_tma_idperso_seq OWNER TO postgres;
 
 --
--- TOC entry 5001 (class 0 OID 0)
+-- TOC entry 5013 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: bdtma_personal_tma_idperso_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -144,7 +143,7 @@ CREATE SEQUENCE public.bdtma_produc_tma_idprodu_seq
 ALTER SEQUENCE public.bdtma_produc_tma_idprodu_seq OWNER TO postgres;
 
 --
--- TOC entry 5002 (class 0 OID 0)
+-- TOC entry 5014 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: bdtma_produc_tma_idprodu_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -170,7 +169,7 @@ CREATE TABLE public.bdtma_proveed (
 ALTER TABLE public.bdtma_proveed OWNER TO postgres;
 
 --
--- TOC entry 5003 (class 0 OID 0)
+-- TOC entry 5015 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: COLUMN bdtma_proveed.tma_rif; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -195,12 +194,55 @@ CREATE SEQUENCE public.bdtma_proveed_tma_idprove_seq
 ALTER SEQUENCE public.bdtma_proveed_tma_idprove_seq OWNER TO postgres;
 
 --
--- TOC entry 5004 (class 0 OID 0)
+-- TOC entry 5016 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: bdtma_proveed_tma_idprove_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.bdtma_proveed_tma_idprove_seq OWNED BY public.bdtma_proveed.tma_idprove;
+
+
+--
+-- TOC entry 246 (class 1259 OID 20257)
+-- Name: cargos; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.cargos (
+    id integer NOT NULL,
+    nombre_cargo character varying(80) NOT NULL,
+    descripcion text,
+    nivel character varying(30),
+    salario_base numeric(10,2),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.cargos OWNER TO postgres;
+
+--
+-- TOC entry 245 (class 1259 OID 20256)
+-- Name: cargos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.cargos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.cargos_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5017 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: cargos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.cargos_id_seq OWNED BY public.cargos.id;
 
 
 --
@@ -238,7 +280,7 @@ CREATE SEQUENCE public.tb_balance_tb_idbalanc_seq
 ALTER SEQUENCE public.tb_balance_tb_idbalanc_seq OWNER TO postgres;
 
 --
--- TOC entry 5005 (class 0 OID 0)
+-- TOC entry 5018 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: tb_balance_tb_idbalanc_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -280,7 +322,7 @@ CREATE SEQUENCE public.tb_compras_tb_idcompra_seq
 ALTER SEQUENCE public.tb_compras_tb_idcompra_seq OWNER TO postgres;
 
 --
--- TOC entry 5006 (class 0 OID 0)
+-- TOC entry 5019 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: tb_compras_tb_idcompra_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -322,7 +364,7 @@ CREATE SEQUENCE public.tb_detcomp_tb_iddetco_seq
 ALTER SEQUENCE public.tb_detcomp_tb_iddetco_seq OWNER TO postgres;
 
 --
--- TOC entry 5007 (class 0 OID 0)
+-- TOC entry 5020 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: tb_detcomp_tb_iddetco_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -364,7 +406,7 @@ CREATE SEQUENCE public.tb_detvent_tb_iddetve_seq
 ALTER SEQUENCE public.tb_detvent_tb_iddetve_seq OWNER TO postgres;
 
 --
--- TOC entry 5008 (class 0 OID 0)
+-- TOC entry 5021 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: tb_detvent_tb_iddetve_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -404,7 +446,7 @@ CREATE SEQUENCE public.tb_invinven_tb_idinven_seq
 ALTER SEQUENCE public.tb_invinven_tb_idinven_seq OWNER TO postgres;
 
 --
--- TOC entry 5009 (class 0 OID 0)
+-- TOC entry 5022 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: tb_invinven_tb_idinven_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -449,7 +491,7 @@ CREATE SEQUENCE public.tb_producc_tb_idproduc_seq
 ALTER SEQUENCE public.tb_producc_tb_idproduc_seq OWNER TO postgres;
 
 --
--- TOC entry 5010 (class 0 OID 0)
+-- TOC entry 5023 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: tb_producc_tb_idproduc_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -490,7 +532,7 @@ CREATE SEQUENCE public.tb_reportes_tb_idreport_seq
 ALTER SEQUENCE public.tb_reportes_tb_idreport_seq OWNER TO postgres;
 
 --
--- TOC entry 5011 (class 0 OID 0)
+-- TOC entry 5024 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: tb_reportes_tb_idreport_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -528,7 +570,7 @@ CREATE SEQUENCE public.tb_roles_id_seq
 ALTER SEQUENCE public.tb_roles_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5012 (class 0 OID 0)
+-- TOC entry 5025 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: tb_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -576,7 +618,7 @@ CREATE SEQUENCE public.tb_usuarios_id_seq
 ALTER SEQUENCE public.tb_usuarios_id_seq OWNER TO postgres;
 
 --
--- TOC entry 5013 (class 0 OID 0)
+-- TOC entry 5026 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: tb_usuarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -617,7 +659,7 @@ CREATE SEQUENCE public.tb_ventas_tb_idventa_seq
 ALTER SEQUENCE public.tb_ventas_tb_idventa_seq OWNER TO postgres;
 
 --
--- TOC entry 5014 (class 0 OID 0)
+-- TOC entry 5027 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: tb_ventas_tb_idventa_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -626,7 +668,7 @@ ALTER SEQUENCE public.tb_ventas_tb_idventa_seq OWNED BY public.tb_ventas.tb_idve
 
 
 --
--- TOC entry 4763 (class 2604 OID 20075)
+-- TOC entry 4768 (class 2604 OID 20075)
 -- Name: bdtma_cliente tma_idclien; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -634,7 +676,7 @@ ALTER TABLE ONLY public.bdtma_cliente ALTER COLUMN tma_idclien SET DEFAULT nextv
 
 
 --
--- TOC entry 4762 (class 2604 OID 20066)
+-- TOC entry 4767 (class 2604 OID 20066)
 -- Name: bdtma_personal tma_idperso; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -642,7 +684,7 @@ ALTER TABLE ONLY public.bdtma_personal ALTER COLUMN tma_idperso SET DEFAULT next
 
 
 --
--- TOC entry 4765 (class 2604 OID 20096)
+-- TOC entry 4770 (class 2604 OID 20096)
 -- Name: bdtma_produc tma_idprodu; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -650,7 +692,7 @@ ALTER TABLE ONLY public.bdtma_produc ALTER COLUMN tma_idprodu SET DEFAULT nextva
 
 
 --
--- TOC entry 4769 (class 2604 OID 20151)
+-- TOC entry 4774 (class 2604 OID 20151)
 -- Name: bdtma_proveed tma_idprove; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -658,7 +700,15 @@ ALTER TABLE ONLY public.bdtma_proveed ALTER COLUMN tma_idprove SET DEFAULT nextv
 
 
 --
--- TOC entry 4761 (class 2604 OID 20057)
+-- TOC entry 4783 (class 2604 OID 20260)
+-- Name: cargos id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cargos ALTER COLUMN id SET DEFAULT nextval('public.cargos_id_seq'::regclass);
+
+
+--
+-- TOC entry 4766 (class 2604 OID 20057)
 -- Name: tb_balance tb_idbalanc; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -666,7 +716,7 @@ ALTER TABLE ONLY public.tb_balance ALTER COLUMN tb_idbalanc SET DEFAULT nextval(
 
 
 --
--- TOC entry 4770 (class 2604 OID 20160)
+-- TOC entry 4775 (class 2604 OID 20160)
 -- Name: tb_compras tb_idcompra; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -674,7 +724,7 @@ ALTER TABLE ONLY public.tb_compras ALTER COLUMN tb_idcompra SET DEFAULT nextval(
 
 
 --
--- TOC entry 4771 (class 2604 OID 20172)
+-- TOC entry 4776 (class 2604 OID 20172)
 -- Name: tb_detcomp tb_iddetco; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -682,7 +732,7 @@ ALTER TABLE ONLY public.tb_detcomp ALTER COLUMN tb_iddetco SET DEFAULT nextval('
 
 
 --
--- TOC entry 4766 (class 2604 OID 20105)
+-- TOC entry 4771 (class 2604 OID 20105)
 -- Name: tb_detvent tb_iddetve; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -690,7 +740,7 @@ ALTER TABLE ONLY public.tb_detvent ALTER COLUMN tb_iddetve SET DEFAULT nextval('
 
 
 --
--- TOC entry 4768 (class 2604 OID 20139)
+-- TOC entry 4773 (class 2604 OID 20139)
 -- Name: tb_invinven tb_idinven; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -698,7 +748,7 @@ ALTER TABLE ONLY public.tb_invinven ALTER COLUMN tb_idinven SET DEFAULT nextval(
 
 
 --
--- TOC entry 4767 (class 2604 OID 20122)
+-- TOC entry 4772 (class 2604 OID 20122)
 -- Name: tb_producc tb_idproduc; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -706,7 +756,7 @@ ALTER TABLE ONLY public.tb_producc ALTER COLUMN tb_idproduc SET DEFAULT nextval(
 
 
 --
--- TOC entry 4760 (class 2604 OID 20048)
+-- TOC entry 4765 (class 2604 OID 20048)
 -- Name: tb_reportes tb_idreport; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -714,7 +764,7 @@ ALTER TABLE ONLY public.tb_reportes ALTER COLUMN tb_idreport SET DEFAULT nextval
 
 
 --
--- TOC entry 4777 (class 2604 OID 20207)
+-- TOC entry 4782 (class 2604 OID 20207)
 -- Name: tb_roles id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -722,7 +772,7 @@ ALTER TABLE ONLY public.tb_roles ALTER COLUMN id SET DEFAULT nextval('public.tb_
 
 
 --
--- TOC entry 4772 (class 2604 OID 20189)
+-- TOC entry 4777 (class 2604 OID 20189)
 -- Name: tb_usuarios id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -730,7 +780,7 @@ ALTER TABLE ONLY public.tb_usuarios ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 4764 (class 2604 OID 20084)
+-- TOC entry 4769 (class 2604 OID 20084)
 -- Name: tb_ventas tb_idventa; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -738,7 +788,7 @@ ALTER TABLE ONLY public.tb_ventas ALTER COLUMN tb_idventa SET DEFAULT nextval('p
 
 
 --
--- TOC entry 4974 (class 0 OID 20072)
+-- TOC entry 4984 (class 0 OID 20072)
 -- Dependencies: 224
 -- Data for Name: bdtma_cliente; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -753,17 +803,19 @@ COPY public.bdtma_cliente (tma_idclien, tma_nombrec, tma_direcci, tma_telefon, t
 
 
 --
--- TOC entry 4972 (class 0 OID 20063)
+-- TOC entry 4982 (class 0 OID 20063)
 -- Dependencies: 222
 -- Data for Name: bdtma_personal; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.bdtma_personal (tma_idperso, tma_nombrep, tma_cargope, tma_fechcon, tma_salario, tma_telefon, tma_emailpe, tma_estadpe) FROM stdin;
+1	Ashly	Jefe de cultivo	2026-01-01	1000.00	04126759712	1@gmail.com	Activo
+2	pablo	jefe area	2026-02-22	10000.00	04147109021	parraj6@gmail.com	Activo
 \.
 
 
 --
--- TOC entry 4978 (class 0 OID 20093)
+-- TOC entry 4988 (class 0 OID 20093)
 -- Dependencies: 228
 -- Data for Name: bdtma_produc; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -781,7 +833,7 @@ COPY public.bdtma_produc (tma_idprodu, tma_nombrep, tma_descrip, tma_unidade, tm
 
 
 --
--- TOC entry 4986 (class 0 OID 20148)
+-- TOC entry 4996 (class 0 OID 20148)
 -- Dependencies: 236
 -- Data for Name: bdtma_proveed; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -796,7 +848,29 @@ COPY public.bdtma_proveed (tma_idprove, tma_nombrep, tma_direcc, tma_telefon, tm
 
 
 --
--- TOC entry 4970 (class 0 OID 20054)
+-- TOC entry 5006 (class 0 OID 20257)
+-- Dependencies: 246
+-- Data for Name: cargos; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.cargos (id, nombre_cargo, descripcion, nivel, salario_base, created_at, updated_at) FROM stdin;
+1	Gerente General	Responsable de la gestión general de la empresa	Directivo	2500.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+2	Subgerente	Apoya al gerente en la toma de decisiones	Directivo	2000.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+3	Administrador	Gestiona recursos administrativos y operativos	Administrativo	1800.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+4	Contador	Responsable de la contabilidad y finanzas	Profesional	1600.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+5	Analista de Sistemas	Desarrolla y mantiene sistemas informáticos	Profesional	1700.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+6	Supervisor	Supervisa las operaciones diarias del personal	Operativo	1400.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+7	Asistente Administrativo	Apoyo en tareas administrativas	Administrativo	1000.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+8	Recepcionista	Atiende clientes y llamadas	Operativo	900.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+9	Vendedor	Encargado de ventas y atención al cliente	Operativo	950.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+10	Técnico de Soporte	Brinda soporte técnico a usuarios	Técnico	1100.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+11	Chofer	Responsable del transporte y logística	Operativo	850.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+12	Personal de Limpieza	Mantenimiento y limpieza de instalaciones	Operativo	700.00	2026-01-03 00:20:50.879958	2026-01-03 00:20:50.879958
+\.
+
+
+--
+-- TOC entry 4980 (class 0 OID 20054)
 -- Dependencies: 220
 -- Data for Name: tb_balance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -806,7 +880,7 @@ COPY public.tb_balance (tb_idbalanc, tb_fechabal, tb_tipomovi, tb_montobal, tb_d
 
 
 --
--- TOC entry 4988 (class 0 OID 20157)
+-- TOC entry 4998 (class 0 OID 20157)
 -- Dependencies: 238
 -- Data for Name: tb_compras; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -825,7 +899,7 @@ COPY public.tb_compras (tb_idcompra, tb_idproveed, tb_fechcomp, tb_totalcom, tb_
 
 
 --
--- TOC entry 4990 (class 0 OID 20169)
+-- TOC entry 5000 (class 0 OID 20169)
 -- Dependencies: 240
 -- Data for Name: tb_detcomp; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -853,7 +927,7 @@ COPY public.tb_detcomp (tb_iddetco, tb_idcompr, tb_idprodu, tb_cantidad, tb_prec
 
 
 --
--- TOC entry 4980 (class 0 OID 20102)
+-- TOC entry 4990 (class 0 OID 20102)
 -- Dependencies: 230
 -- Data for Name: tb_detvent; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -863,7 +937,7 @@ COPY public.tb_detvent (tb_iddetve, tb_idventa, tb_idprodu, tb_cantida, tb_precu
 
 
 --
--- TOC entry 4984 (class 0 OID 20136)
+-- TOC entry 4994 (class 0 OID 20136)
 -- Dependencies: 234
 -- Data for Name: tb_invinven; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -873,7 +947,7 @@ COPY public.tb_invinven (tb_idinven, tb_idprodu, tb_cantidis, tb_fechult) FROM s
 
 
 --
--- TOC entry 4982 (class 0 OID 20119)
+-- TOC entry 4992 (class 0 OID 20119)
 -- Dependencies: 232
 -- Data for Name: tb_producc; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -883,7 +957,7 @@ COPY public.tb_producc (tb_idproduc, tb_idprodut, tb_fechsiem, tb_fechcose, tb_c
 
 
 --
--- TOC entry 4968 (class 0 OID 20045)
+-- TOC entry 4978 (class 0 OID 20045)
 -- Dependencies: 218
 -- Data for Name: tb_reportes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -893,7 +967,7 @@ COPY public.tb_reportes (tb_idreport, tb_nombrerp, tb_fechgene, tb_contrepo, tb_
 
 
 --
--- TOC entry 4994 (class 0 OID 20204)
+-- TOC entry 5004 (class 0 OID 20204)
 -- Dependencies: 244
 -- Data for Name: tb_roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -903,7 +977,7 @@ COPY public.tb_roles (id, rol_name) FROM stdin;
 
 
 --
--- TOC entry 4992 (class 0 OID 20186)
+-- TOC entry 5002 (class 0 OID 20186)
 -- Dependencies: 242
 -- Data for Name: tb_usuarios; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -913,7 +987,7 @@ COPY public.tb_usuarios (id, usuario, password, nombre, apellido, email, telefon
 
 
 --
--- TOC entry 4976 (class 0 OID 20081)
+-- TOC entry 4986 (class 0 OID 20081)
 -- Dependencies: 226
 -- Data for Name: tb_ventas; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -923,7 +997,7 @@ COPY public.tb_ventas (tb_idventa, tb_idclien, tb_fechvent, tb_totalven, tb_esta
 
 
 --
--- TOC entry 5015 (class 0 OID 0)
+-- TOC entry 5028 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: bdtma_cliente_tma_idclien_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -932,16 +1006,16 @@ SELECT pg_catalog.setval('public.bdtma_cliente_tma_idclien_seq', 7, true);
 
 
 --
--- TOC entry 5016 (class 0 OID 0)
+-- TOC entry 5029 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: bdtma_personal_tma_idperso_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bdtma_personal_tma_idperso_seq', 1, false);
+SELECT pg_catalog.setval('public.bdtma_personal_tma_idperso_seq', 3, true);
 
 
 --
--- TOC entry 5017 (class 0 OID 0)
+-- TOC entry 5030 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: bdtma_produc_tma_idprodu_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -950,7 +1024,7 @@ SELECT pg_catalog.setval('public.bdtma_produc_tma_idprodu_seq', 55, true);
 
 
 --
--- TOC entry 5018 (class 0 OID 0)
+-- TOC entry 5031 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: bdtma_proveed_tma_idprove_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -959,7 +1033,16 @@ SELECT pg_catalog.setval('public.bdtma_proveed_tma_idprove_seq', 30, true);
 
 
 --
--- TOC entry 5019 (class 0 OID 0)
+-- TOC entry 5032 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: cargos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.cargos_id_seq', 12, true);
+
+
+--
+-- TOC entry 5033 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: tb_balance_tb_idbalanc_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -968,7 +1051,7 @@ SELECT pg_catalog.setval('public.tb_balance_tb_idbalanc_seq', 1, false);
 
 
 --
--- TOC entry 5020 (class 0 OID 0)
+-- TOC entry 5034 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: tb_compras_tb_idcompra_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -977,7 +1060,7 @@ SELECT pg_catalog.setval('public.tb_compras_tb_idcompra_seq', 75, true);
 
 
 --
--- TOC entry 5021 (class 0 OID 0)
+-- TOC entry 5035 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: tb_detcomp_tb_iddetco_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -986,7 +1069,7 @@ SELECT pg_catalog.setval('public.tb_detcomp_tb_iddetco_seq', 139, true);
 
 
 --
--- TOC entry 5022 (class 0 OID 0)
+-- TOC entry 5036 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: tb_detvent_tb_iddetve_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -995,7 +1078,7 @@ SELECT pg_catalog.setval('public.tb_detvent_tb_iddetve_seq', 1, false);
 
 
 --
--- TOC entry 5023 (class 0 OID 0)
+-- TOC entry 5037 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: tb_invinven_tb_idinven_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1004,7 +1087,7 @@ SELECT pg_catalog.setval('public.tb_invinven_tb_idinven_seq', 1, false);
 
 
 --
--- TOC entry 5024 (class 0 OID 0)
+-- TOC entry 5038 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: tb_producc_tb_idproduc_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1013,7 +1096,7 @@ SELECT pg_catalog.setval('public.tb_producc_tb_idproduc_seq', 1, false);
 
 
 --
--- TOC entry 5025 (class 0 OID 0)
+-- TOC entry 5039 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: tb_reportes_tb_idreport_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1022,7 +1105,7 @@ SELECT pg_catalog.setval('public.tb_reportes_tb_idreport_seq', 1, false);
 
 
 --
--- TOC entry 5026 (class 0 OID 0)
+-- TOC entry 5040 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: tb_roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1031,7 +1114,7 @@ SELECT pg_catalog.setval('public.tb_roles_id_seq', 1, false);
 
 
 --
--- TOC entry 5027 (class 0 OID 0)
+-- TOC entry 5041 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: tb_usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1040,7 +1123,7 @@ SELECT pg_catalog.setval('public.tb_usuarios_id_seq', 1, false);
 
 
 --
--- TOC entry 5028 (class 0 OID 0)
+-- TOC entry 5042 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: tb_ventas_tb_idventa_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
@@ -1049,7 +1132,7 @@ SELECT pg_catalog.setval('public.tb_ventas_tb_idventa_seq', 1, false);
 
 
 --
--- TOC entry 4785 (class 2606 OID 20079)
+-- TOC entry 4793 (class 2606 OID 20079)
 -- Name: bdtma_cliente bdtma_cliente_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1058,7 +1141,7 @@ ALTER TABLE ONLY public.bdtma_cliente
 
 
 --
--- TOC entry 4783 (class 2606 OID 20070)
+-- TOC entry 4791 (class 2606 OID 20070)
 -- Name: bdtma_personal bdtma_personal_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1067,7 +1150,7 @@ ALTER TABLE ONLY public.bdtma_personal
 
 
 --
--- TOC entry 4789 (class 2606 OID 20100)
+-- TOC entry 4797 (class 2606 OID 20100)
 -- Name: bdtma_produc bdtma_produc_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1076,7 +1159,7 @@ ALTER TABLE ONLY public.bdtma_produc
 
 
 --
--- TOC entry 4797 (class 2606 OID 20155)
+-- TOC entry 4805 (class 2606 OID 20155)
 -- Name: bdtma_proveed bdtma_proveed_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1085,7 +1168,16 @@ ALTER TABLE ONLY public.bdtma_proveed
 
 
 --
--- TOC entry 4781 (class 2606 OID 20061)
+-- TOC entry 4821 (class 2606 OID 20266)
+-- Name: cargos cargos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cargos
+    ADD CONSTRAINT cargos_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4789 (class 2606 OID 20061)
 -- Name: tb_balance tb_balance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1094,7 +1186,7 @@ ALTER TABLE ONLY public.tb_balance
 
 
 --
--- TOC entry 4799 (class 2606 OID 20162)
+-- TOC entry 4807 (class 2606 OID 20162)
 -- Name: tb_compras tb_compras_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1103,7 +1195,7 @@ ALTER TABLE ONLY public.tb_compras
 
 
 --
--- TOC entry 4801 (class 2606 OID 20174)
+-- TOC entry 4809 (class 2606 OID 20174)
 -- Name: tb_detcomp tb_detcomp_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1112,7 +1204,7 @@ ALTER TABLE ONLY public.tb_detcomp
 
 
 --
--- TOC entry 4791 (class 2606 OID 20107)
+-- TOC entry 4799 (class 2606 OID 20107)
 -- Name: tb_detvent tb_detvent_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1121,7 +1213,7 @@ ALTER TABLE ONLY public.tb_detvent
 
 
 --
--- TOC entry 4795 (class 2606 OID 20141)
+-- TOC entry 4803 (class 2606 OID 20141)
 -- Name: tb_invinven tb_invinven_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1130,7 +1222,7 @@ ALTER TABLE ONLY public.tb_invinven
 
 
 --
--- TOC entry 4793 (class 2606 OID 20124)
+-- TOC entry 4801 (class 2606 OID 20124)
 -- Name: tb_producc tb_producc_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1139,7 +1231,7 @@ ALTER TABLE ONLY public.tb_producc
 
 
 --
--- TOC entry 4779 (class 2606 OID 20052)
+-- TOC entry 4787 (class 2606 OID 20052)
 -- Name: tb_reportes tb_reportes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1148,7 +1240,7 @@ ALTER TABLE ONLY public.tb_reportes
 
 
 --
--- TOC entry 4809 (class 2606 OID 20209)
+-- TOC entry 4817 (class 2606 OID 20209)
 -- Name: tb_roles tb_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1157,7 +1249,7 @@ ALTER TABLE ONLY public.tb_roles
 
 
 --
--- TOC entry 4811 (class 2606 OID 20211)
+-- TOC entry 4819 (class 2606 OID 20211)
 -- Name: tb_roles tb_roles_rol_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1166,7 +1258,7 @@ ALTER TABLE ONLY public.tb_roles
 
 
 --
--- TOC entry 4803 (class 2606 OID 20201)
+-- TOC entry 4811 (class 2606 OID 20201)
 -- Name: tb_usuarios tb_usuarios_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1175,7 +1267,7 @@ ALTER TABLE ONLY public.tb_usuarios
 
 
 --
--- TOC entry 4805 (class 2606 OID 20197)
+-- TOC entry 4813 (class 2606 OID 20197)
 -- Name: tb_usuarios tb_usuarios_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1184,7 +1276,7 @@ ALTER TABLE ONLY public.tb_usuarios
 
 
 --
--- TOC entry 4807 (class 2606 OID 20199)
+-- TOC entry 4815 (class 2606 OID 20199)
 -- Name: tb_usuarios tb_usuarios_usuario_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1193,7 +1285,7 @@ ALTER TABLE ONLY public.tb_usuarios
 
 
 --
--- TOC entry 4787 (class 2606 OID 20086)
+-- TOC entry 4795 (class 2606 OID 20086)
 -- Name: tb_ventas tb_ventas_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1202,7 +1294,7 @@ ALTER TABLE ONLY public.tb_ventas
 
 
 --
--- TOC entry 4821 (class 2606 OID 20212)
+-- TOC entry 4831 (class 2606 OID 20212)
 -- Name: tb_usuarios fk_rol_usuario; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1211,7 +1303,7 @@ ALTER TABLE ONLY public.tb_usuarios
 
 
 --
--- TOC entry 4818 (class 2606 OID 20163)
+-- TOC entry 4828 (class 2606 OID 20163)
 -- Name: tb_compras tb_compras_tb_idproveed_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1220,7 +1312,7 @@ ALTER TABLE ONLY public.tb_compras
 
 
 --
--- TOC entry 4819 (class 2606 OID 20175)
+-- TOC entry 4829 (class 2606 OID 20175)
 -- Name: tb_detcomp tb_detcomp_tb_idcompr_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1229,7 +1321,7 @@ ALTER TABLE ONLY public.tb_detcomp
 
 
 --
--- TOC entry 4820 (class 2606 OID 20180)
+-- TOC entry 4830 (class 2606 OID 20180)
 -- Name: tb_detcomp tb_detcomp_tb_idprodu_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1238,7 +1330,7 @@ ALTER TABLE ONLY public.tb_detcomp
 
 
 --
--- TOC entry 4813 (class 2606 OID 20113)
+-- TOC entry 4823 (class 2606 OID 20113)
 -- Name: tb_detvent tb_detvent_tb_idprodu_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1247,7 +1339,7 @@ ALTER TABLE ONLY public.tb_detvent
 
 
 --
--- TOC entry 4814 (class 2606 OID 20108)
+-- TOC entry 4824 (class 2606 OID 20108)
 -- Name: tb_detvent tb_detvent_tb_idventa_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1256,7 +1348,7 @@ ALTER TABLE ONLY public.tb_detvent
 
 
 --
--- TOC entry 4817 (class 2606 OID 20142)
+-- TOC entry 4827 (class 2606 OID 20142)
 -- Name: tb_invinven tb_invinven_tb_idprodu_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1265,7 +1357,7 @@ ALTER TABLE ONLY public.tb_invinven
 
 
 --
--- TOC entry 4815 (class 2606 OID 20125)
+-- TOC entry 4825 (class 2606 OID 20125)
 -- Name: tb_producc tb_producc_tb_idprodut_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1274,7 +1366,7 @@ ALTER TABLE ONLY public.tb_producc
 
 
 --
--- TOC entry 4816 (class 2606 OID 20130)
+-- TOC entry 4826 (class 2606 OID 20130)
 -- Name: tb_producc tb_producc_tb_idrespon_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1283,7 +1375,7 @@ ALTER TABLE ONLY public.tb_producc
 
 
 --
--- TOC entry 4812 (class 2606 OID 20087)
+-- TOC entry 4822 (class 2606 OID 20087)
 -- Name: tb_ventas tb_ventas_tb_idclien_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1291,7 +1383,7 @@ ALTER TABLE ONLY public.tb_ventas
     ADD CONSTRAINT tb_ventas_tb_idclien_fkey FOREIGN KEY (tb_idclien) REFERENCES public.bdtma_cliente(tma_idclien);
 
 
--- Completed on 2026-01-02 16:24:38
+-- Completed on 2026-01-03 02:21:27
 
 --
 -- PostgreSQL database dump complete
