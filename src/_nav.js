@@ -88,7 +88,13 @@ const _nav = [
     to: '/reportes',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
   },
- 
+  
+   {
+    component: CNavItem,
+    name: 'Cargos',
+    to: '/cargos',
+    icon: <CIcon icon={cilBalanceScale} customClassName="nav-icon" />,
+  },
 ]
 
 export default _nav
