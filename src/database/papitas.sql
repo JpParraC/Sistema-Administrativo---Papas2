@@ -53,7 +53,6 @@ CREATE SEQUENCE public.bdtma_cliente_tma_idclien_seq
     NO MAXVALUE
     CACHE 1;
 
-
 ALTER SEQUENCE public.bdtma_cliente_tma_idclien_seq OWNER TO postgres;
 
 --
