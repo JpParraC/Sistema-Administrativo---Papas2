@@ -34,18 +34,36 @@ const Personal = () => {
   })
 
   // ======================
-  // FETCH PERSONAL Y CARGOS
+  // FETCH PERSONAL
   // ======================
   const fetchPersonal = async () => {
-    const res = await fetch(API_PERSONAL)
-    const data = await res.json()
-    setPersonal(data)
+    try {
+      const res = await fetch(API_PERSONAL)
+      const data = await res.json()
+      setPersonal(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error al cargar personal', error)
+      setPersonal([])
+    }
   }
- //hola
+
+  // ======================
+  // FETCH CARGOS
+  // ======================
   const fetchCargos = async () => {
-    const res = await fetch(API_CARGOS)
-    const data = await res.json()
-    setCargos(data) // [{id, nombre_cargo, descripcion, nivel, salario_base}]
+    try {
+      const res = await fetch(API_CARGOS)
+      const data = await res.json()
+
+      if (Array.isArray(data)) setCargos(data)
+      else if (Array.isArray(data.data)) setCargos(data.data)
+      else if (Array.isArray(data.cargos)) setCargos(data.cargos)
+      else setCargos([])
+
+    } catch (error) {
+      console.error('Error al cargar cargos', error)
+      setCargos([])
+    }
   }
 
   useEffect(() => {
@@ -82,7 +100,7 @@ const Personal = () => {
 
       await fetchPersonal()
       handleClose()
-    } catch (error) {
+    } catch {
       alert('Error al guardar')
     } finally {
       setLoading(false)
@@ -109,7 +127,6 @@ const Personal = () => {
   // ======================
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este empleado?')) return
-
     await fetch(`${API_PERSONAL}/${id}`, { method: 'DELETE' })
     fetchPersonal()
   }
@@ -156,11 +173,11 @@ const Personal = () => {
 
           <CTableBody>
             {personal.map((p, i) => (
-              <CTableRow key={p.id}>
+              <CTableRow key={`personal-${p.id ?? i}`}>
                 <CTableDataCell>{i + 1}</CTableDataCell>
                 <CTableDataCell>{p.tma_nombrep}</CTableDataCell>
                 <CTableDataCell>{p.tma_cargope}</CTableDataCell>
-                <CTableDataCell>{p.tma_fechcon}</CTableDataCell>
+                <CTableDataCell>{p.tma_fechcon?.split('T')[0]}</CTableDataCell>
                 <CTableDataCell>${p.tma_salario}</CTableDataCell>
                 <CTableDataCell>{p.tma_telefon}</CTableDataCell>
                 <CTableDataCell>{p.tma_emailpe}</CTableDataCell>
@@ -170,10 +187,12 @@ const Personal = () => {
                   </CBadge>
                 </CTableDataCell>
                 <CTableDataCell className="text-center">
-                  <CButton size="sm" color="warning" variant="outline" className="me-2" title="Editar" onClick={() => handleEdit(p)}>
+                  <CButton size="sm" color="warning" variant="outline" className="me-2"
+                    onClick={() => handleEdit(p)}>
                     <CIcon icon={cilPencil} />
                   </CButton>
-                  <CButton size="sm" color="danger" variant="outline" title="Eliminar" onClick={() => handleDelete(p.id)}>
+                  <CButton size="sm" color="danger" variant="outline"
+                    onClick={() => handleDelete(p.id)}>
                     <CIcon icon={cilTrash} />
                   </CButton>
                 </CTableDataCell>
@@ -193,7 +212,6 @@ const Personal = () => {
           <CModalBody>
             <CFormInput label="Nombre" name="tma_nombrep" value={form.tma_nombrep} onChange={handleInputChange} required />
 
-            {/* SELECT DE CARGOS */}
             <CFormSelect
               label="Cargo"
               name="tma_cargope"
@@ -202,8 +220,8 @@ const Personal = () => {
               required
             >
               <option value="">Selecciona un cargo</option>
-              {cargos.map(c => (
-                <option key={c.id} value={c.nombre_cargo}>
+              {Array.isArray(cargos) && cargos.map((c, i) => (
+                <option key={`cargo-${c.id ?? i}`} value={c.nombre_cargo}>
                   {c.nombre_cargo} ({c.nivel}) - ${c.salario_base}
                 </option>
               ))}
@@ -216,7 +234,7 @@ const Personal = () => {
 
             <CFormSelect label="Estado" name="tma_estadpe" value={form.tma_estadpe} onChange={handleInputChange}>
               {estadosPersonal.map(e => (
-                <option key={e} value={e}>{e}</option>
+                <option key={`estado-${e}`} value={e}>{e}</option>
               ))}
             </CFormSelect>
           </CModalBody>
