@@ -1,113 +1,117 @@
 import React, { useEffect, useState } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm, CFormInput,
-  CFormSelect, CBadge, CInputGroup, CInputGroupText
+  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow,
+  CTableHeaderCell, CTableBody, CTableDataCell, CModal, CModalHeader,
+  CModalBody, CModalFooter, CForm, CFormInput, CFormSelect, CBadge
 } from '@coreui/react'
 
-// Simulación de datos (reemplaza con fetch a tu API real)
-const clientesMock = [
-  { id: 1, nombre: 'Cliente Uno' },
-  { id: 2, nombre: 'Cliente Dos' },
-  { id: 3, nombre: 'Cliente Tres' },
-]
-
-const productosMock = [
-  { id: 1, nombre: 'Papa Negra' },
-  { id: 2, nombre: 'Papa Blanca' },
-  { id: 3, nombre: 'Papa Criolla' },
-]
-
-const ventasMock = [
-  {
-    id: 1,
-    cliente_id: 1,
-    cliente: 'Cliente Uno',
-    fecha_venta: '2025-07-07 12:00',
-    total_venta: 2500.00,
-    estado_venta: 'Completada',
-    detalle: [
-      {
-        id: 1,
-        venta_id: 1,
-        producto_id: 1,
-        producto: 'Papa Negra',
-        cantidad: 10,
-        precio_unitario_venta: 100,
-        subtotal: 1000
-      },
-      {
-        id: 2,
-        venta_id: 1,
-        producto_id: 2,
-        producto: 'Papa Blanca',
-        cantidad: 15,
-        precio_unitario_venta: 100,
-        subtotal: 1500
-      }
-    ]
-  },
-  {
-    id: 2,
-    cliente_id: 2,
-    cliente: 'Cliente Dos',
-    fecha_venta: '2025-07-06 17:30',
-    total_venta: 1200.00,
-    estado_venta: 'Pendiente',
-    detalle: [
-      {
-        id: 3,
-        venta_id: 2,
-        producto_id: 3,
-        producto: 'Papa Criolla',
-        cantidad: 12,
-        precio_unitario_venta: 100,
-        subtotal: 1200
-      }
-    ]
-  }
-]
+const API_URL = 'http://localhost:4000/api'
 
 const estadoColors = {
-  'Pendiente': 'warning',
-  'Completada': 'success',
-  'Cancelada': 'danger'
+  Pendiente: 'warning',
+  Completada: 'success',
+  Cancelada: 'danger'
 }
 
 const Ventas = () => {
   const [ventas, setVentas] = useState([])
   const [clientes, setClientes] = useState([])
   const [productos, setProductos] = useState([])
-  const [visible, setVisible] = useState(false)
+  const [visibleVenta, setVisibleVenta] = useState(false)
   const [visibleDetalle, setVisibleDetalle] = useState(false)
+  const [visibleCedula, setVisibleCedula] = useState(false)
+  const [visibleNuevoCliente, setVisibleNuevoCliente] = useState(false)
   const [detalleSeleccionado, setDetalleSeleccionado] = useState([])
+  const [detalleVenta, setDetalleVenta] = useState([])
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
+
   const [form, setForm] = useState({
     cliente_id: '',
-    fecha_venta: '',
-    total_venta: '',
     estado_venta: 'Pendiente'
   })
-  const [detalleVenta, setDetalleVenta] = useState([
-    // { producto_id, cantidad, precio_unitario_venta, subtotal }
-  ])
 
-  // Filtros
-  const [filtroCliente, setFiltroCliente] = useState('')
-  const [filtroEstado, setFiltroEstado] = useState('')
-  const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
-  const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
+  const [cedulaInput, setCedulaInput] = useState('')
+  const [nuevoClienteForm, setNuevoClienteForm] = useState({
+    nombre: '',
+    direccion: '',
+    telefono: '',
+    email: '',
+    cedula: ''
+  })
 
+  /* ======================
+     CARGA INICIAL
+  ====================== */
   useEffect(() => {
-    setVentas(ventasMock)
-    setClientes(clientesMock)
-    setProductos(productosMock)
+    fetchVentas()
+    fetchProductos()
   }, [])
 
-  const handleInputChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const fetchVentas = async () => {
+    try {
+      const res = await fetch(`${API_URL}/ventas`)
+      const data = await res.json()
+      setVentas(
+        data.map(v => ({
+          id: v.tb_idventa,
+          cliente_id: v.tb_idclien,
+          cliente: v.cliente,
+          fecha_venta: v.tb_fechvent,
+          total_venta: Number(v.tb_totalven),
+          estado_venta: v.tb_estadven
+        }))
+      )
+    } catch (error) {
+      console.error('Error cargando ventas', error)
+    }
   }
 
-  // Detalle de venta handlers
+  const fetchProductos = async () => {
+    try {
+      const res = await fetch(`${API_URL}/productos/cosecha`)
+      const data = await res.json()
+      setProductos(data.map(p => ({
+        id: p.id,
+        nombre: p.nombre
+      })))
+    } catch (error) {
+      console.error('Error cargando productos', error)
+    }
+  }
+
+  /* ======================
+     DETALLE VENTA
+  ====================== */
+  const verDetalleVenta = async (idVenta) => {
+    try {
+      const res = await fetch(`${API_URL}/ventas/${idVenta}`)
+      const data = await res.json()
+      setDetalleSeleccionado(
+        data.detalles.map(d => ({
+          producto: d.producto || d.tb_idprodu,
+          cantidad: d.tb_cantida,
+          precio_unitario_venta: d.tb_precuni,
+          subtotal: d.tb_subtota
+        }))
+      )
+      setVisibleDetalle(true)
+    } catch (error) {
+      console.error('Error obteniendo detalle', error)
+    }
+  }
+
+  /* ======================
+     NUEVA VENTA
+  ====================== */
+  const handleAddDetalle = () => {
+    setDetalleVenta([...detalleVenta, {
+      producto_id: '',
+      cantidad: '',
+      precio_unitario_venta: '',
+      subtotal: 0
+    }])
+  }
+
   const handleDetalleChange = (idx, field, value) => {
     const updated = detalleVenta.map((item, i) =>
       i === idx
@@ -115,151 +119,107 @@ const Ventas = () => {
             ...item,
             [field]: value,
             subtotal:
-              field === 'cantidad' || field === 'precio_unitario_venta'
-                ? (field === 'cantidad'
-                    ? value
-                    : item.cantidad || 0) *
-                  (field === 'precio_unitario_venta'
-                    ? value
-                    : item.precio_unitario_venta || 0)
-                : item.subtotal
+              (field === 'cantidad' ? value : item.cantidad || 0) *
+              (field === 'precio_unitario_venta' ? value : item.precio_unitario_venta || 0)
           }
         : item
     )
     setDetalleVenta(updated)
   }
 
-  const handleAddDetalle = () => {
-    setDetalleVenta([
-      ...detalleVenta,
-      {
-        producto_id: '',
-        cantidad: '',
-        precio_unitario_venta: '',
-        subtotal: 0
-      }
-    ])
-  }
-
   const handleRemoveDetalle = (idx) => {
     setDetalleVenta(detalleVenta.filter((_, i) => i !== idx))
   }
 
-  const calcularTotal = () => {
-    return detalleVenta.reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
-  }
+  const calcularTotal = () =>
+    detalleVenta.reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
 
-  const handleAddVenta = (e) => {
+  const handleAddVenta = async (e) => {
     e.preventDefault()
-    const cliente = clientes.find(c => c.id === parseInt(form.cliente_id))
-    // Armar detalle con nombres de producto
-    const detalleConNombres = detalleVenta.map((d, idx) => {
-      const prod = productos.find(p => p.id === parseInt(d.producto_id))
-      return {
-        id: idx + 1,
-        venta_id: ventas.length + 1,
-        producto_id: parseInt(d.producto_id),
-        producto: prod ? prod.nombre : '',
+    if (!clienteSeleccionado) return alert('Debe seleccionar un cliente')
+
+    const payload = {
+      idCliente: parseInt(clienteSeleccionado.tma_idclien),
+      estado: form.estado_venta,
+      detalles: detalleVenta.map(d => ({
+        idProducto: parseInt(d.producto_id),
         cantidad: parseInt(d.cantidad),
-        precio_unitario_venta: parseFloat(d.precio_unitario_venta),
-        subtotal: parseFloat(d.subtotal)
-      }
-    })
-    setVentas([
-      ...ventas,
-      {
-        id: ventas.length + 1,
-        cliente_id: parseInt(form.cliente_id),
-        cliente: cliente ? cliente.nombre : '',
-        fecha_venta: form.fecha_venta,
-        total_venta: calcularTotal(),
-        estado_venta: form.estado_venta,
-        detalle: detalleConNombres
-      }
-    ])
-    setVisible(false)
-    setForm({
-      cliente_id: '',
-      fecha_venta: '',
-      total_venta: '',
-      estado_venta: 'Pendiente'
-    })
-    setDetalleVenta([])
+        precio: parseFloat(d.precio_unitario_venta)
+      }))
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/ventas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) throw new Error()
+
+      setVisibleVenta(false)
+      setDetalleVenta([])
+      setForm({ cliente_id: '', estado_venta: 'Pendiente' })
+      setClienteSeleccionado(null)
+      fetchVentas()
+    } catch (error) {
+      alert('Error al guardar la venta')
+    }
   }
 
-  // Filtro funcional y visualmente ordenado
-  const ventasFiltradas = ventas.filter((venta) => {
-    const matchCliente = filtroCliente ? venta.cliente_id === parseInt(filtroCliente) : true
-    const matchEstado = filtroEstado ? venta.estado_venta === filtroEstado : true
-    const fechaVenta = venta.fecha_venta.slice(0, 10)
-    const matchFechaDesde = filtroFechaDesde ? fechaVenta >= filtroFechaDesde : true
-    const matchFechaHasta = filtroFechaHasta ? fechaVenta <= filtroFechaHasta : true
-    return matchCliente && matchEstado && matchFechaDesde && matchFechaHasta
-  })
+  /* ======================
+     CLIENTE POR CEDULA
+  ====================== */
+  const buscarCliente = async () => {
+    try {
+      const res = await fetch(`${API_URL}/clientes/cedula/${cedulaInput}`)
+      if (res.status === 404) {
+        // No encontrado, abrir modal de nuevo cliente
+        setNuevoClienteForm({ ...nuevoClienteForm, cedula: cedulaInput })
+        setVisibleNuevoCliente(true)
+      } else {
+        const data = await res.json()
+        setClienteSeleccionado(data)
+        setVisibleCedula(false)
+        setVisibleVenta(true)
+      }
+    } catch (error) {
+      console.error('Error buscando cliente', error)
+    }
+  }
+
+  const registrarNuevoCliente = async () => {
+    try {
+      const res = await fetch(`${API_URL}/clientes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevoClienteForm)
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setClienteSeleccionado(data)
+      setVisibleNuevoCliente(false)
+      setVisibleCedula(false)
+      setVisibleVenta(true)
+    } catch (error) {
+      alert('Error registrando cliente')
+    }
+  }
+
+  /* ======================
+     FILTROS
+  ====================== */
+  const ventasFiltradas = ventas
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #E6EBE0 60%, #36C9C6 100%)', border: 'none', boxShadow: '0 2px 16px 0 #36C9C633' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#ED6A5A', color: '#fff' }}>
-        <h5 className="mb-0" style={{ letterSpacing: 1 }}>Ventas</h5>
-        <CButton color="light" style={{ color: '#ED6A5A', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
-          + Nueva Venta
-        </CButton>
+    <CCard>
+      <CCardHeader className="d-flex justify-content-between">
+        <h5>Ventas</h5>
+        <CButton onClick={() => setVisibleCedula(true)}>+ Nueva Venta</CButton>
       </CCardHeader>
+
       <CCardBody>
-        {/* Filtros organizados */}
-        <div className="mb-4 d-flex flex-wrap gap-3 align-items-end" style={{ background: '#F4F1BB', borderRadius: 8, padding: 16 }}>
-          <CFormSelect
-            size="sm"
-            style={{ maxWidth: 200 }}
-            label="Cliente"
-            value={filtroCliente}
-            onChange={e => setFiltroCliente(e.target.value)}
-          >
-            <option value="">Todos los clientes</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </CFormSelect>
-          <CFormSelect
-            size="sm"
-            style={{ maxWidth: 150 }}
-            label="Estado"
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            <option>Pendiente</option>
-            <option>Completada</option>
-            <option>Cancelada</option>
-          </CFormSelect>
-          <CInputGroup size="sm" style={{ maxWidth: 260 }}>
-            <CInputGroupText>Desde</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaDesde}
-              onChange={e => setFiltroFechaDesde(e.target.value)}
-            />
-            <CInputGroupText>Hasta</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaHasta}
-              onChange={e => setFiltroFechaHasta(e.target.value)}
-            />
-          </CInputGroup>
-          {(filtroCliente || filtroEstado || filtroFechaDesde || filtroFechaHasta) && (
-            <CButton color="secondary" size="sm" variant="outline" onClick={() => {
-              setFiltroCliente('')
-              setFiltroEstado('')
-              setFiltroFechaDesde('')
-              setFiltroFechaHasta('')
-            }}>
-              Limpiar filtros
-            </CButton>
-          )}
-        </div>
-        {/* Tabla */}
-        <CTable hover responsive bordered align="middle" className="shadow-sm" style={{ background: '#fff', borderRadius: 8 }}>
-          <CTableHead color="light">
+        <CTable bordered hover responsive>
+          <CTableHead>
             <CTableRow>
               <CTableHeaderCell>#</CTableHeaderCell>
               <CTableHeaderCell>Cliente</CTableHeaderCell>
@@ -270,46 +230,17 @@ const Ventas = () => {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {ventasFiltradas.length === 0 && (
-              <CTableRow>
-                <CTableDataCell colSpan={6} className="text-center text-muted">
-                  No hay ventas registradas con los filtros seleccionados.
-                </CTableDataCell>
-              </CTableRow>
-            )}
-            {ventasFiltradas.map((venta) => (
-              <CTableRow key={venta.id}>
-                <CTableDataCell>{venta.id}</CTableDataCell>
+            {ventasFiltradas.map(v => (
+              <CTableRow key={v.id}>
+                <CTableDataCell>{v.id}</CTableDataCell>
+                <CTableDataCell>{v.cliente}</CTableDataCell>
+                <CTableDataCell>{v.fecha_venta}</CTableDataCell>
+                <CTableDataCell>${v.total_venta.toFixed(2)}</CTableDataCell>
                 <CTableDataCell>
-                  <CBadge color="info" style={{ fontSize: 13, background: '#36C9C6', color: '#fff' }}>
-                    {venta.cliente}
-                  </CBadge>
+                  <CBadge color={estadoColors[v.estado_venta]}>{v.estado_venta}</CBadge>
                 </CTableDataCell>
                 <CTableDataCell>
-                  <span style={{ fontFamily: 'monospace', color: '#6c757d' }}>
-                    {venta.fecha_venta}
-                  </span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span style={{ color: '#ED6A5A', fontWeight: 600 }}>${venta.total_venta.toFixed(2)}</span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CBadge color={estadoColors[venta.estado_venta] || 'secondary'}>
-                    {venta.estado_venta}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CButton
-                    color="info"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setDetalleSeleccionado(venta.detalle || [])
-                      setVisibleDetalle(true)
-                    }}
-                  >
-                    Ver Detalle
-                  </CButton>
+                  <CButton size="sm" onClick={() => verDetalleVenta(v.id)}>Ver</CButton>
                 </CTableDataCell>
               </CTableRow>
             ))}
@@ -317,81 +248,84 @@ const Ventas = () => {
         </CTable>
       </CCardBody>
 
-      {/* Modal para nueva venta */}
-      <CModal visible={visible} onClose={() => setVisible(false)} size="lg">
-        <CModalHeader style={{ background: '#ED6A5A', color: '#fff' }}>
-          <strong>Nueva Venta</strong>
-        </CModalHeader>
+      {/* MODAL CEDULA */}
+      <CModal visible={visibleCedula} onClose={() => setVisibleCedula(false)}>
+        <CModalHeader>Buscar Cliente por Cédula</CModalHeader>
+        <CModalBody>
+          <CFormInput
+            placeholder="Ingrese cédula"
+            value={cedulaInput}
+            onChange={e => setCedulaInput(e.target.value)}
+          />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisibleCedula(false)}>Cancelar</CButton>
+          <CButton onClick={buscarCliente}>Buscar</CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* MODAL NUEVO CLIENTE */}
+      <CModal visible={visibleNuevoCliente} onClose={() => setVisibleNuevoCliente(false)}>
+        <CModalHeader>Registrar Nuevo Cliente</CModalHeader>
+        <CModalBody>
+          <CFormInput
+            className="mb-2"
+            placeholder="Nombre"
+            value={nuevoClienteForm.nombre}
+            onChange={e => setNuevoClienteForm({ ...nuevoClienteForm, nombre: e.target.value })}
+          />
+          <CFormInput
+            className="mb-2"
+            placeholder="Dirección"
+            value={nuevoClienteForm.direccion}
+            onChange={e => setNuevoClienteForm({ ...nuevoClienteForm, direccion: e.target.value })}
+          />
+          <CFormInput
+            className="mb-2"
+            placeholder="Teléfono"
+            value={nuevoClienteForm.telefono}
+            onChange={e => setNuevoClienteForm({ ...nuevoClienteForm, telefono: e.target.value })}
+          />
+          <CFormInput
+            className="mb-2"
+            placeholder="Email"
+            value={nuevoClienteForm.email}
+            onChange={e => setNuevoClienteForm({ ...nuevoClienteForm, email: e.target.value })}
+          />
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisibleNuevoCliente(false)}>Cancelar</CButton>
+          <CButton onClick={registrarNuevoCliente}>Registrar</CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* MODAL NUEVA VENTA */}
+      <CModal visible={visibleVenta} onClose={() => setVisibleVenta(false)} size="lg">
+        <CModalHeader>Nueva Venta</CModalHeader>
         <CForm onSubmit={handleAddVenta}>
           <CModalBody>
-            <CFormSelect
-              label="Cliente"
-              name="cliente_id"
-              value={form.cliente_id}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Seleccione cliente</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </CFormSelect>
             <CFormInput
-              className="mt-2"
-              type="datetime-local"
-              label="Fecha de venta"
-              name="fecha_venta"
-              value={form.fecha_venta}
-              onChange={handleInputChange}
-              required
+              label="Cliente"
+              value={clienteSeleccionado?.tma_nombrec || ''}
+              readOnly
             />
-            <CFormSelect
-              className="mt-2"
-              label="Estado"
-              name="estado_venta"
-              value={form.estado_venta}
-              onChange={handleInputChange}
-              required
-            >
-              <option>Pendiente</option>
-              <option>Completada</option>
-              <option>Cancelada</option>
-            </CFormSelect>
-            <div className="mt-4 mb-2">
-              <strong>Detalle de la venta</strong>
-              <CButton color="success" size="sm" className="ms-2" onClick={handleAddDetalle}>
-                + Agregar producto
-              </CButton>
+
+            <div className="mt-3">
+              <CButton size="sm" onClick={handleAddDetalle}>+ Agregar producto</CButton>
             </div>
-            <CTable bordered small>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell>Producto</CTableHeaderCell>
-                  <CTableHeaderCell>Cantidad</CTableHeaderCell>
-                  <CTableHeaderCell>Precio Unitario</CTableHeaderCell>
-                  <CTableHeaderCell>Subtotal</CTableHeaderCell>
-                  <CTableHeaderCell></CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
+
+            <CTable small bordered className="mt-2">
               <CTableBody>
-                {detalleVenta.length === 0 && (
-                  <CTableRow>
-                    <CTableDataCell colSpan={5} className="text-center text-muted">
-                      Agregue productos a la venta.
-                    </CTableDataCell>
-                  </CTableRow>
-                )}
-                {detalleVenta.map((item, idx) => (
-                  <CTableRow key={idx}>
+                {detalleVenta.map((d, i) => (
+                  <CTableRow key={i}>
                     <CTableDataCell>
                       <CFormSelect
                         size="sm"
-                        value={item.producto_id}
-                        onChange={e => handleDetalleChange(idx, 'producto_id', e.target.value)}
-                        required
+                        value={d.producto_id}
+                        onChange={e => handleDetalleChange(i, 'producto_id', e.target.value)}
                       >
-                        <option value="">Seleccione producto</option>
-                        {productos.map((p) => (
+                        <option value="">Producto</option>
+                        {productos.map(p => (
                           <option key={p.id} value={p.id}>{p.nombre}</option>
                         ))}
                       </CFormSelect>
@@ -400,93 +334,57 @@ const Ventas = () => {
                       <CFormInput
                         size="sm"
                         type="number"
-                        min={1}
-                        value={item.cantidad}
-                        onChange={e => handleDetalleChange(idx, 'cantidad', parseInt(e.target.value) || '')}
-                        required
+                        value={d.cantidad}
+                        onChange={e => handleDetalleChange(i, 'cantidad', e.target.value)}
                       />
                     </CTableDataCell>
                     <CTableDataCell>
                       <CFormInput
                         size="sm"
                         type="number"
-                        min={0}
-                        step="0.01"
-                        value={item.precio_unitario_venta}
-                        onChange={e => handleDetalleChange(idx, 'precio_unitario_venta', parseFloat(e.target.value) || '')}
-                        required
+                        value={d.precio_unitario_venta}
+                        onChange={e => handleDetalleChange(i, 'precio_unitario_venta', e.target.value)}
                       />
                     </CTableDataCell>
+                    <CTableDataCell>${d.subtotal}</CTableDataCell>
                     <CTableDataCell>
-                      <span style={{ color: '#ED6A5A', fontWeight: 600 }}>
-                        ${item.subtotal ? Number(item.subtotal).toFixed(2) : '0.00'}
-                      </span>
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      <CButton color="danger" size="sm" variant="outline" onClick={() => handleRemoveDetalle(idx)}>
-                        Quitar
-                      </CButton>
+                      <CButton size="sm" color="danger" onClick={() => handleRemoveDetalle(i)}>X</CButton>
                     </CTableDataCell>
                   </CTableRow>
                 ))}
               </CTableBody>
             </CTable>
-            <div className="text-end mt-2">
-              <strong>Total: </strong>
-              <span style={{ color: '#36C9C6', fontWeight: 700, fontSize: 18 }}>
-                ${calcularTotal().toFixed(2)}
-              </span>
+
+            <div className="text-end">
+              <strong>Total: ${calcularTotal().toFixed(2)}</strong>
             </div>
           </CModalBody>
           <CModalFooter>
-            <CButton color="secondary" onClick={() => setVisible(false)}>
-              Cancelar
-            </CButton>
-            <CButton color="primary" type="submit" disabled={detalleVenta.length === 0}>
-              Guardar
-            </CButton>
+            <CButton color="secondary" onClick={() => setVisibleVenta(false)}>Cancelar</CButton>
+            <CButton type="submit" disabled={!detalleVenta.length}>Guardar</CButton>
           </CModalFooter>
         </CForm>
       </CModal>
 
-      {/* Modal Detalle Venta */}
+      {/* MODAL DETALLE */}
       <CModal visible={visibleDetalle} onClose={() => setVisibleDetalle(false)}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
-          <strong>Detalle de la Venta</strong>
-        </CModalHeader>
+        <CModalHeader>Detalle Venta</CModalHeader>
         <CModalBody>
-          <CTable bordered small>
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>Producto</CTableHeaderCell>
-                <CTableHeaderCell>Cantidad</CTableHeaderCell>
-                <CTableHeaderCell>Precio Unitario</CTableHeaderCell>
-                <CTableHeaderCell>Subtotal</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
+          <CTable small bordered>
             <CTableBody>
-              {detalleSeleccionado.length === 0 && (
-                <CTableRow>
-                  <CTableDataCell colSpan={4} className="text-center text-muted">
-                    Sin productos en esta venta.
-                  </CTableDataCell>
-                </CTableRow>
-              )}
-              {detalleSeleccionado.map((item, idx) => (
-                <CTableRow key={idx}>
-                  <CTableDataCell>{item.producto}</CTableDataCell>
-                  <CTableDataCell>{item.cantidad}</CTableDataCell>
-                  <CTableDataCell>${Number(item.precio_unitario_venta).toFixed(2)}</CTableDataCell>
-                  <CTableDataCell>${Number(item.subtotal).toFixed(2)}</CTableDataCell>
+              {detalleSeleccionado.map((d, i) => (
+                <CTableRow key={i}>
+                  <CTableDataCell>{d.producto}</CTableDataCell>
+                  <CTableDataCell>{d.cantidad}</CTableDataCell>
+                  <CTableDataCell>${d.precio_unitario_venta}</CTableDataCell>
+                  <CTableDataCell>${d.subtotal}</CTableDataCell>
                 </CTableRow>
               ))}
             </CTableBody>
           </CTable>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisibleDetalle(false)}>
-            Cerrar
-          </CButton>
+          <CButton onClick={() => setVisibleDetalle(false)}>Cerrar</CButton>
         </CModalFooter>
       </CModal>
     </CCard>
@@ -494,5 +392,3 @@ const Ventas = () => {
 }
 
 export default Ventas
-
-//commit

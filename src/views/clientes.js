@@ -1,241 +1,178 @@
 import { useEffect, useState } from 'react'
 import {
-  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm, CFormInput,
-  CBadge, CInputGroup, CInputGroupText
+  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow,
+  CTableHeaderCell, CTableBody, CTableDataCell, CModal, CModalHeader,
+  CModalBody, CModalFooter, CForm, CFormInput, CBadge, CFormFeedback
 } from '@coreui/react'
+import { CIcon } from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilCheckCircle } from '@coreui/icons'
 
 const Clientes = () => {
   const [clientes, setClientes] = useState([])
   const [visible, setVisible] = useState(false)
   const [editVisible, setEditVisible] = useState(false)
+  const [deleteVisible, setDeleteVisible] = useState(false)
+  const [successVisible, setSuccessVisible] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
   const [selectedCliente, setSelectedCliente] = useState(null)
 
   const [form, setForm] = useState({
+    cedula: '',
     nombre_cliente: '',
     direccion: '',
     telefono: '',
     email: ''
   })
 
-  // Filtros
-  const [filtroNombre, setFiltroNombre] = useState('')
-  const [filtroTelefono, setFiltroTelefono] = useState('')
-  const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
-  const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
+  const [errors, setErrors] = useState({})
 
   const API_URL = 'http://localhost:4000/api/clientes'
 
-  // Obtener clientes
   const fetchClientes = async () => {
-    try {
-      const res = await fetch(API_URL)
-      const data = await res.json()
-      const clientesMapeados = data.map(item => ({
-        id: item.tma_idclien,
-        nombre_cliente: item.tma_nombrec,
-        direccion: item.tma_direcci,
-        telefono: item.tma_telefon,
-        email: item.tma_emailcl,
-        fecha_registro: item.tma_fechreg
-      }))
-      setClientes(clientesMapeados)
-    } catch (err) {
-      console.error('Error obteniendo clientes:', err)
-    }
+    const res = await fetch(API_URL)
+    const data = await res.json()
+    setClientes(data.map(i => ({
+      id: i.tma_idclien,
+      cedula: i.tma_cedula,
+      nombre_cliente: i.tma_nombrec,
+      direccion: i.tma_direcci,
+      telefono: i.tma_telefon,
+      email: i.tma_emailcl
+    })))
   }
 
-  useEffect(() => {
-    fetchClientes()
-  }, [])
+  useEffect(() => { fetchClientes() }, [])
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // Crear cliente
-  const handleAddCliente = async (e) => {
-    e.preventDefault()
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre_cliente,
-          direccion: form.direccion,
-          telefono: form.telefono,
-          email: form.email
-        })
-      })
-      const nuevoCliente = await res.json()
-      setClientes([...clientes, {
-        id: nuevoCliente.tma_idclien,
-        nombre_cliente: nuevoCliente.tma_nombrec,
-        direccion: nuevoCliente.tma_direcci,
-        telefono: nuevoCliente.tma_telefon,
-        email: nuevoCliente.tma_emailcl,
-        fecha_registro: nuevoCliente.tma_fechreg
-      }])
-      setVisible(false)
-      setForm({ nombre_cliente: '', direccion: '', telefono: '', email: '' })
-    } catch (err) {
-      console.error('Error creando cliente:', err)
-    }
+  // 🔎 Validaciones
+  const validateForm = () => {
+    const errs = {}
+    if (!form.cedula || !/^\d+$/.test(form.cedula)) errs.cedula = 'La cédula solo debe contener números'
+    if (!form.nombre_cliente) errs.nombre_cliente = 'Nombre obligatorio'
+    if (!form.direccion) errs.direccion = 'Dirección obligatoria'
+    if (!form.telefono || !/^\d+$/.test(form.telefono)) errs.telefono = 'Teléfono inválido'
+    if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Email inválido'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
-  // Editar cliente
-  const handleEditCliente = (cliente) => {
-    setSelectedCliente(cliente)
-    setForm({
-      nombre_cliente: cliente.nombre_cliente,
-      direccion: cliente.direccion,
-      telefono: cliente.telefono,
-      email: cliente.email
+  // ➕ Crear
+  const handleAddCliente = async e => {
+    e.preventDefault()
+    if (!validateForm()) return
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cedula: form.cedula,
+        nombre: form.nombre_cliente,
+        direccion: form.direccion,
+        telefono: form.telefono,
+        email: form.email
+      })
     })
+    fetchClientes()
+    setVisible(false)
+    setSuccessMessage('Cliente creado exitosamente')
+    setSuccessVisible(true)
+  }
+
+  // ✏️ Editar
+  const handleEditCliente = cliente => {
+    setSelectedCliente(cliente)
+    setForm(cliente)
     setEditVisible(true)
   }
 
-  const handleUpdateCliente = async (e) => {
+  const handleUpdateCliente = async e => {
     e.preventDefault()
-    try {
-      const res = await fetch(`${API_URL}/${selectedCliente.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre_cliente,
-          direccion: form.direccion,
-          telefono: form.telefono,
-          email: form.email
-        })
+    if (!validateForm()) return
+    await fetch(`${API_URL}/${selectedCliente.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cedula: form.cedula,
+        nombre: form.nombre_cliente,
+        direccion: form.direccion,
+        telefono: form.telefono,
+        email: form.email
       })
-      const updatedCliente = await res.json()
-      setClientes(clientes.map(c => c.id === updatedCliente.tma_idclien ? {
-        id: updatedCliente.tma_idclien,
-        nombre_cliente: updatedCliente.tma_nombrec,
-        direccion: updatedCliente.tma_direcci,
-        telefono: updatedCliente.tma_telefon,
-        email: updatedCliente.tma_emailcl,
-        fecha_registro: updatedCliente.tma_fechreg
-      } : c))
-      setEditVisible(false)
-      setForm({ nombre_cliente: '', direccion: '', telefono: '', email: '' })
-      setSelectedCliente(null)
-    } catch (err) {
-      console.error('Error actualizando cliente:', err)
-    }
+    })
+    fetchClientes()
+    setEditVisible(false)
+    setSuccessMessage('Cliente actualizado correctamente')
+    setSuccessVisible(true)
   }
 
-  // Eliminar cliente
-  const handleDeleteCliente = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este cliente?')) return
-    try {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-      setClientes(clientes.filter(c => c.id !== id))
-    } catch (err) {
-      console.error('Error eliminando cliente:', err)
-    }
+  // 🗑️ Eliminar
+  const confirmDelete = cliente => {
+    setSelectedCliente(cliente)
+    setDeleteVisible(true)
   }
 
-  // Filtro
-  const clientesFiltrados = clientes.filter(item => {
-    const matchNombre = filtroNombre ? item.nombre_cliente.toLowerCase().includes(filtroNombre.toLowerCase()) : true
-    const matchTelefono = filtroTelefono ? item.telefono.includes(filtroTelefono) : true
-    const fechaRegistro = item.fecha_registro?.slice(0, 10) || ''
-    const matchFechaDesde = filtroFechaDesde ? fechaRegistro >= filtroFechaDesde : true
-    const matchFechaHasta = filtroFechaHasta ? fechaRegistro <= filtroFechaHasta : true
-    return matchNombre && matchTelefono && matchFechaDesde && matchFechaHasta
-  })
+  const handleDeleteCliente = async () => {
+    await fetch(`${API_URL}/${selectedCliente.id}`, { method: 'DELETE' })
+    fetchClientes()
+    setDeleteVisible(false)
+    setSuccessMessage('Cliente eliminado correctamente')
+    setSuccessVisible(true)
+  }
+
+  const input = (name, label, type = 'text') => (
+    <>
+      <CFormInput
+        label={label}
+        name={name}
+        type={type}
+        value={form[name]}
+        onChange={handleInputChange}
+        invalid={!!errors[name]}
+      />
+      {errors[name] && <CFormFeedback invalid>{errors[name]}</CFormFeedback>}
+    </>
+  )
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #E6EBE0 60%, #9BC1BC 100%)', border: 'none', boxShadow: '0 2px 16px 0 #9BC1BC33' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#ED6A5A', color: '#fff' }}>
-        <h5 className="mb-0" style={{ letterSpacing: 1 }}>Clientes</h5>
-        <CButton color="light" style={{ color: '#ED6A5A', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
-          + Nuevo Cliente
+    <CCard>
+      <CCardHeader className="d-flex justify-content-between">
+        <h5>Clientes</h5>
+        <CButton onClick={() => { setForm({ cedula:'',nombre_cliente:'',direccion:'',telefono:'',email:'' }); setErrors({}); setVisible(true) }}>
+          + Nuevo
         </CButton>
       </CCardHeader>
-      <CCardBody>
-        {/* Filtros */}
-        <div className="mb-4 d-flex flex-wrap gap-3 align-items-end" style={{ background: '#F4F1BB', borderRadius: 8, padding: 16 }}>
-          <CFormInput
-            size="sm"
-            style={{ maxWidth: 200 }}
-            label="Nombre"
-            placeholder="Buscar por nombre"
-            value={filtroNombre}
-            onChange={e => setFiltroNombre(e.target.value)}
-          />
-          <CFormInput
-            size="sm"
-            style={{ maxWidth: 160 }}
-            label="Teléfono"
-            placeholder="Buscar por teléfono"
-            value={filtroTelefono}
-            onChange={e => setFiltroTelefono(e.target.value)}
-          />
-          <CInputGroup size="sm" style={{ maxWidth: 260 }}>
-            <CInputGroupText>Desde</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaDesde}
-              onChange={e => setFiltroFechaDesde(e.target.value)}
-            />
-            <CInputGroupText>Hasta</CInputGroupText>
-            <CFormInput
-              type="date"
-              value={filtroFechaHasta}
-              onChange={e => setFiltroFechaHasta(e.target.value)}
-            />
-          </CInputGroup>
-          {(filtroNombre || filtroTelefono || filtroFechaDesde || filtroFechaHasta) && (
-            <CButton color="secondary" size="sm" variant="outline" onClick={() => {
-              setFiltroNombre('')
-              setFiltroTelefono('')
-              setFiltroFechaDesde('')
-              setFiltroFechaHasta('')
-            }}>
-              Limpiar filtros
-            </CButton>
-          )}
-        </div>
 
-        {/* Tabla */}
-        <CTable hover responsive bordered align="middle" className="shadow-sm" style={{ background: '#fff', borderRadius: 8 }}>
-          <CTableHead color="light">
+      <CCardBody>
+        <CTable hover bordered>
+          <CTableHead>
             <CTableRow>
               <CTableHeaderCell>#</CTableHeaderCell>
+              <CTableHeaderCell>Cédula</CTableHeaderCell>
               <CTableHeaderCell>Nombre</CTableHeaderCell>
               <CTableHeaderCell>Dirección</CTableHeaderCell>
               <CTableHeaderCell>Teléfono</CTableHeaderCell>
               <CTableHeaderCell>Email</CTableHeaderCell>
-              <CTableHeaderCell>Fecha Registro</CTableHeaderCell>
               <CTableHeaderCell>Acciones</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {clientesFiltrados.length === 0 ? (
-              <CTableRow>
-                <CTableDataCell colSpan={7} className="text-center text-muted">
-                  No hay clientes registrados con los filtros seleccionados.
-                </CTableDataCell>
-              </CTableRow>
-            ) : clientesFiltrados.map(item => (
-              <CTableRow key={item.id}>
-                <CTableDataCell>{item.id}</CTableDataCell>
+            {clientes.map(c => (
+              <CTableRow key={c.id}>
+                <CTableDataCell>{c.id}</CTableDataCell>
+                <CTableDataCell>{c.cedula}</CTableDataCell>
+                <CTableDataCell><CBadge color="info">{c.nombre_cliente}</CBadge></CTableDataCell>
+                <CTableDataCell>{c.direccion}</CTableDataCell>
+                <CTableDataCell>{c.telefono}</CTableDataCell>
+                <CTableDataCell>{c.email}</CTableDataCell>
                 <CTableDataCell>
-                  <CBadge color="info" style={{ fontSize: 13, background: '#36C9C6', color: '#fff' }}>
-                    {item.nombre_cliente}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell>{item.direccion}</CTableDataCell>
-                <CTableDataCell>{item.telefono}</CTableDataCell>
-                <CTableDataCell>{item.email}</CTableDataCell>
-                <CTableDataCell style={{ fontFamily: 'monospace', color: '#6c757d' }}>
-                  {item.fecha_registro}
-                </CTableDataCell>
-                <CTableDataCell>
-                  <CButton size="sm" color="warning" className="me-2" onClick={() => handleEditCliente(item)}>Editar</CButton>
-                  <CButton size="sm" color="danger" onClick={() => handleDeleteCliente(item.id)}>Eliminar</CButton>
+                  <CButton size="sm" color="warning" className="me-2" onClick={() => handleEditCliente(c)}>
+                    <CIcon icon={cilPencil} />
+                  </CButton>
+                  <CButton size="sm" color="danger" onClick={() => confirmDelete(c)}>
+                    <CIcon icon={cilTrash} />
+                  </CButton>
                 </CTableDataCell>
               </CTableRow>
             ))}
@@ -243,98 +180,46 @@ const Clientes = () => {
         </CTable>
       </CCardBody>
 
-      {/* Modal para nuevo cliente */}
-      <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader style={{ background: '#ED6A5A', color: '#fff' }}>
-          <strong>Nuevo Cliente</strong>
-        </CModalHeader>
-        <CForm onSubmit={handleAddCliente}>
-          <CModalBody>
-            <CFormInput
-              label="Nombre completo"
-              name="nombre_cliente"
-              value={form.nombre_cliente}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Dirección"
-              name="direccion"
-              value={form.direccion}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Teléfono"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              type="email"
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              required
-            />
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={() => setVisible(false)}>Cancelar</CButton>
-            <CButton color="primary" type="submit">Guardar</CButton>
-          </CModalFooter>
-        </CForm>
+      {/* Modal Form */}
+      {[{v:visible,set:setVisible,t:'Nuevo Cliente',h:handleAddCliente},
+        {v:editVisible,set:setEditVisible,t:'Editar Cliente',h:handleUpdateCliente}
+      ].map((m,i)=>(
+        <CModal key={i} visible={m.v} onClose={()=>m.set(false)}>
+          <CModalHeader><strong>{m.t}</strong></CModalHeader>
+          <CForm onSubmit={m.h}>
+            <CModalBody>
+              {input('cedula','Cédula')}
+              {input('nombre_cliente','Nombre')}
+              {input('direccion','Dirección')}
+              {input('telefono','Teléfono')}
+              {input('email','Email','email')}
+            </CModalBody>
+            <CModalFooter>
+              <CButton color="secondary" onClick={()=>m.set(false)}>Cancelar</CButton>
+              <CButton color="primary" type="submit">Guardar</CButton>
+            </CModalFooter>
+          </CForm>
+        </CModal>
+      ))}
+
+      {/* Modal Eliminar */}
+      <CModal visible={deleteVisible} onClose={()=>setDeleteVisible(false)}>
+        <CModalHeader><strong>Confirmar eliminación</strong></CModalHeader>
+        <CModalBody>
+          ¿Eliminar al cliente <strong>{selectedCliente?.nombre_cliente}</strong>?
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={()=>setDeleteVisible(false)}>Cancelar</CButton>
+          <CButton color="danger" onClick={handleDeleteCliente}>Eliminar</CButton>
+        </CModalFooter>
       </CModal>
 
-      {/* Modal para editar cliente */}
-      <CModal visible={editVisible} onClose={() => setEditVisible(false)}>
-        <CModalHeader style={{ background: '#FFB74D', color: '#fff' }}>
-          <strong>Editar Cliente</strong>
-        </CModalHeader>
-        <CForm onSubmit={handleUpdateCliente}>
-          <CModalBody>
-            <CFormInput
-              label="Nombre completo"
-              name="nombre_cliente"
-              value={form.nombre_cliente}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Dirección"
-              name="direccion"
-              value={form.direccion}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              label="Teléfono"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleInputChange}
-              required
-            />
-            <CFormInput
-              className="mt-2"
-              type="email"
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleInputChange}
-              required
-            />
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={() => setEditVisible(false)}>Cancelar</CButton>
-            <CButton color="primary" type="submit">Actualizar</CButton>
-          </CModalFooter>
-        </CForm>
+      {/* Modal Éxito */}
+      <CModal visible={successVisible} onClose={()=>setSuccessVisible(false)}>
+        <CModalBody className="text-center">
+          <CIcon icon={cilCheckCircle} size="xxl" className="text-success mb-3" />
+          <p>{successMessage}</p>
+        </CModalBody>
       </CModal>
     </CCard>
   )
