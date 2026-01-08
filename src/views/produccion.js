@@ -1,36 +1,16 @@
 import React, { useEffect, useState } from 'react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash } from '@coreui/icons'
 import {
-  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
-  CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm, CFormInput,
-  CFormSelect, CBadge
+  CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow,
+  CTableHeaderCell, CTableBody, CTableDataCell, CModal, CModalHeader,
+  CModalBody, CModalFooter, CForm, CFormInput, CFormSelect, CBadge
 } from '@coreui/react'
-
-// ================== MOCKS ==================
-const personalMock = [
-  { id: 1, nombre_empleado: 'Juan Pérez' },
-  { id: 2, nombre_empleado: 'Ana Gómez' }
-]
-
-const produccionMock = [
-  {
-    id: 1,
-    tb_idprodut: 1,
-    producto: 'Papa Negra',
-    fecha_siembra: '2025-05-01',
-    fecha_cosecha: '2025-08-01',
-    cantidad_esperada: 2000,
-    cantidad_cosechada: 1950,
-    area_cultivo: 3.5,
-    costo_produccion: 12000,
-    responsable_id: 1,
-    responsable: 'Juan Pérez'
-  }
-]
 
 // ================== API ==================
 const API_PRODUCTOS = 'http://localhost:4000/api/productos'
 const API_PERSONAL = 'http://localhost:4000/api/personal'
-const API_PRODUCCION = 'http://localhost:4000/api/produccio' // ruta backend
+const API_PRODUCCION = 'http://localhost:4000/api/producc'
 
 const Produccion = () => {
   const [produccion, setProduccion] = useState([])
@@ -46,31 +26,56 @@ const Produccion = () => {
     cantidad_cosechada: '',
     area_cultivo: '',
     costo_produccion: '',
-    responsable_id: ''
+    responsable_id: '',
+    tb_idproduc: null,
   })
 
-  // ================== FILTROS ==================
-  const [filtroProducto, setFiltroProducto] = useState('')
-  const [filtroResponsable, setFiltroResponsable] = useState('')
-  const [filtroFechaSiembraDesde, setFiltroFechaSiembraDesde] = useState('')
-  const [filtroFechaSiembraHasta, setFiltroFechaSiembraHasta] = useState('')
-  const [filtroFechaCosechaDesde, setFiltroFechaCosechaDesde] = useState('')
-  const [filtroFechaCosechaHasta, setFiltroFechaCosechaHasta] = useState('')
+  // ================== MODALES ==================
+  const [visibleMsg, setVisibleMsg] = useState(false)
+  const [msgContent, setMsgContent] = useState({ title: '', text: '', color: 'info' })
+
+  const [visibleConfirm, setVisibleConfirm] = useState(false)
+  const [produccionAEliminar, setProduccionAEliminar] = useState(null)
+
+  const showMessage = (title, text, color = 'info') => {
+    setMsgContent({ title, text, color })
+    setVisibleMsg(true)
+  }
+
+  const showConfirm = (item) => {
+    setProduccionAEliminar(item)
+    setVisibleConfirm(true)
+  }
 
   // ================== CARGA INICIAL ==================
   useEffect(() => {
     fetchProductos()
     fetchPersonal()
-    setProduccion(produccionMock)
+    fetchProduccion()
   }, [])
+
+  // ================== FETCH ==================
+  const fetchProduccion = async () => {
+    try {
+      const res = await fetch(API_PRODUCCION)
+      const data = await res.json()
+      setProduccion(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error cargando producción', error)
+      showMessage('Error', 'No se pudo cargar la producción', 'danger')
+      setProduccion([])
+    }
+  }
 
   const fetchProductos = async () => {
     try {
       const res = await fetch(API_PRODUCTOS)
       const data = await res.json()
-      setProductos(data)
+      setProductos(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error cargando productos', error)
+      showMessage('Error', 'No se pudieron cargar los productos', 'danger')
+      setProductos([])
     }
   }
 
@@ -81,53 +86,50 @@ const Produccion = () => {
       setPersonal(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error cargando personal', error)
+      showMessage('Error', 'No se pudo cargar el personal', 'danger')
       setPersonal([])
     }
   }
 
-  const productosCosecha = productos.filter((p) => p.tma_tipo === 'cosecha')
-
+  // ================== HANDLERS ==================
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  // ================== CREAR / EDITAR ==================
   const handleAddProduccion = async (e) => {
     e.preventDefault()
 
     try {
       const payload = {
-        tb_idprodut: parseInt(form.tb_idprodut),          // ⚡ CAMBIO A tb_idprodut
-        fecha_siembra: form.fecha_siembra,
-        fecha_cosecha: form.fecha_cosecha,
-        cantidad_esperada: parseFloat(form.cantidad_esperada),
-        cantidad_cosechada: form.cantidad_cosechada ? parseFloat(form.cantidad_cosechada) : 0,
-        area_cultivo: parseFloat(form.area_cultivo),
-        costo_produccion: parseFloat(form.costo_produccion),
-        responsable_id: parseInt(form.responsable_id)
+        tb_idprodut: Number(form.tb_idprodut),
+        tb_fechsiem: form.fecha_siembra,
+        tb_fechcose: form.fecha_cosecha,
+        tb_canespel: Number(form.cantidad_esperada),
+        tb_canoscoh: form.cantidad_cosechada ? Number(form.cantidad_cosechada) : 0,
+        tb_areacult: Number(form.area_cultivo),
+        tb_costprod: Number(form.costo_produccion),
+        tb_idrespon: Number(form.responsable_id),
       }
 
-      const res = await fetch(API_PRODUCCION, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      let res
+      if (form.tb_idproduc) {
+        res = await fetch(`${API_PRODUCCION}/${form.tb_idproduc}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await fetch(API_PRODUCCION, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
 
-      if (!res.ok) throw new Error('Error al registrar producción')
+      if (!res.ok) throw new Error('Error al guardar producción')
 
-      const data = await res.json()
-
-      const producto = productos.find((p) => p.tma_idprodu === data.tb_idprodut)
-      const responsable = personal.find((p) => p.id === data.responsable_id)
-
-      setProduccion([
-        ...produccion,
-        {
-          ...data,
-          producto: producto ? producto.tma_nombrep : '',
-          responsable: responsable ? responsable.tma_nombrep : ''
-        }
-      ])
-
+      await fetchProduccion()
       setVisible(false)
       setForm({
         tb_idprodut: '',
@@ -137,31 +139,74 @@ const Produccion = () => {
         cantidad_cosechada: '',
         area_cultivo: '',
         costo_produccion: '',
-        responsable_id: ''
+        responsable_id: '',
+        tb_idproduc: null,
       })
+
+      showMessage(
+        'Éxito',
+        form.tb_idproduc ? 'Producción actualizada correctamente' : 'Producción creada correctamente',
+        'success'
+      )
     } catch (error) {
-      console.error('Error al crear producción:', error)
-      alert('No se pudo registrar la producción')
+      console.error(error)
+      showMessage('Error', 'No se pudo guardar la producción', 'danger')
     }
   }
 
-  const produccionFiltrada = produccion.filter((item) => {
-    const matchProducto = filtroProducto ? item.tb_idprodut === parseInt(filtroProducto) : true
-    const matchResponsable = filtroResponsable ? item.responsable_id === parseInt(filtroResponsable) : true
-    const matchSiembraDesde = filtroFechaSiembraDesde ? item.fecha_siembra >= filtroFechaSiembraDesde : true
-    const matchSiembraHasta = filtroFechaSiembraHasta ? item.fecha_siembra <= filtroFechaSiembraHasta : true
-    const matchCosechaDesde = filtroFechaCosechaDesde ? item.fecha_cosecha >= filtroFechaCosechaDesde : true
-    const matchCosechaHasta = filtroFechaCosechaHasta ? item.fecha_cosecha <= filtroFechaCosechaHasta : true
-    return matchProducto && matchResponsable && matchSiembraDesde && matchSiembraHasta && matchCosechaDesde && matchCosechaHasta
-  })
+  // ================== EDITAR ==================
+  const handleEditProduccion = (item) => {
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const d = new Date(dateString)
+      const year = d.getFullYear()
+      const month = (d.getMonth() + 1).toString().padStart(2, '0')
+      const day = d.getDate().toString().padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    setForm({
+      tb_idprodut: item.tb_idprodut,
+      fecha_siembra: formatDate(item.fecha_siembra),
+      fecha_cosecha: formatDate(item.fecha_cosecha),
+      cantidad_esperada: item.cantidad_esperada,
+      cantidad_cosechada: item.cantidad_cosechada,
+      area_cultivo: item.area_cultivo,
+      costo_produccion: item.costo_produccion,
+      responsable_id: item.tb_idrespon,
+      tb_idproduc: item.id,
+    })
+
+    setVisible(true)
+  }
+
+  // ================== ELIMINAR ==================
+  const handleDeleteProduccion = async () => {
+    if (!produccionAEliminar) return
+
+    try {
+      const res = await fetch(`${API_PRODUCCION}/${produccionAEliminar.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al eliminar producción')
+
+      setProduccion(produccion.filter(p => p.id !== produccionAEliminar.id))
+      showMessage('Éxito', 'Producción eliminada correctamente', 'success')
+    } catch (error) {
+      console.error(error)
+      showMessage('Error', 'No se pudo eliminar la producción', 'danger')
+    } finally {
+      setVisibleConfirm(false)
+      setProduccionAEliminar(null)
+    }
+  }
+
+  // ================== DATA DERIVADA ==================
+  const productosCosecha = productos.filter(p => p.tma_tipo === 'cosecha')
 
   return (
     <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <h5>Producción</h5>
-        <CButton color="primary" onClick={() => setVisible(true)}>
-          + Nueva Producción
-        </CButton>
+        <CButton color="primary" onClick={() => setVisible(true)}>+ Nueva Producción</CButton>
       </CCardHeader>
 
       <CCardBody>
@@ -177,34 +222,64 @@ const Produccion = () => {
               <CTableHeaderCell>Área</CTableHeaderCell>
               <CTableHeaderCell>Costo</CTableHeaderCell>
               <CTableHeaderCell>Responsable</CTableHeaderCell>
+              <CTableHeaderCell>Acciones</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
+
           <CTableBody>
-            {produccionFiltrada.map((item) => (
+            {produccion.map((item) => (
               <CTableRow key={item.id}>
                 <CTableDataCell>{item.id}</CTableDataCell>
                 <CTableDataCell><CBadge color="info">{item.producto}</CBadge></CTableDataCell>
-                <CTableDataCell>{item.fecha_siembra}</CTableDataCell>
-                <CTableDataCell>{item.fecha_cosecha}</CTableDataCell>
+                <CTableDataCell>{new Date(item.fecha_siembra).toLocaleDateString()}</CTableDataCell>
+                <CTableDataCell>{new Date(item.fecha_cosecha).toLocaleDateString()}</CTableDataCell>
                 <CTableDataCell>{item.cantidad_esperada}</CTableDataCell>
                 <CTableDataCell>{item.cantidad_cosechada}</CTableDataCell>
                 <CTableDataCell>{item.area_cultivo}</CTableDataCell>
-                <CTableDataCell>${item.costo_produccion.toFixed(2)}</CTableDataCell>
+                <CTableDataCell>${Number(item.costo_produccion).toFixed(2)}</CTableDataCell>
                 <CTableDataCell>{item.responsable}</CTableDataCell>
+
+                <CTableDataCell className="text-center">
+                  <CButton
+                    size="sm"
+                    color="warning"
+                    variant="outline"
+                    className="me-2"
+                    onClick={() => handleEditProduccion(item)}
+                  >
+                    <CIcon icon={cilPencil} />
+                  </CButton>
+                  <CButton
+                    size="sm"
+                    color="danger"
+                    variant="outline"
+                    onClick={() => showConfirm(item)}
+                  >
+                    <CIcon icon={cilTrash} />
+                  </CButton>
+                </CTableDataCell>
               </CTableRow>
             ))}
           </CTableBody>
         </CTable>
       </CCardBody>
 
+      {/* ================== MODAL CREAR / EDITAR ================== */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader><strong>Nueva Producción</strong></CModalHeader>
+        <CModalHeader>
+          <strong>{form.tb_idproduc ? 'Editar Producción' : 'Nueva Producción'}</strong>
+        </CModalHeader>
         <CForm onSubmit={handleAddProduccion}>
           <CModalBody>
-
-            <CFormSelect label="Producto" name="tb_idprodut" value={form.tb_idprodut} onChange={handleInputChange} required>
+            <CFormSelect
+              label="Producto"
+              name="tb_idprodut"
+              value={form.tb_idprodut}
+              onChange={handleInputChange}
+              required
+            >
               <option value="">Seleccione producto</option>
-              {productosCosecha.map((p) => (
+              {productosCosecha.map(p => (
                 <option key={p.tma_idprodu} value={p.tma_idprodu}>{p.tma_nombrep}</option>
               ))}
             </CFormSelect>
@@ -215,21 +290,40 @@ const Produccion = () => {
             <CFormInput className="mt-2" type="number" label="Cantidad cosechada" name="cantidad_cosechada" value={form.cantidad_cosechada} onChange={handleInputChange} />
             <CFormInput className="mt-2" type="number" label="Área cultivo" name="area_cultivo" value={form.area_cultivo} onChange={handleInputChange} required />
             <CFormInput className="mt-2" type="number" label="Costo producción" name="costo_produccion" value={form.costo_produccion} onChange={handleInputChange} required />
-
             <CFormSelect className="mt-2" label="Responsable" name="responsable_id" value={form.responsable_id} onChange={handleInputChange} required>
               <option value="">Seleccione responsable</option>
-              {personal.map((p) => (
-                <option key={p.id} value={p.id}>{p.tma_nombrep}</option>
-              ))}
+              {personal.map(p => <option key={p.tma_idperso} value={p.tma_idperso}>{p.tma_nombrep}</option>)}
             </CFormSelect>
-
           </CModalBody>
+
           <CModalFooter>
             <CButton color="secondary" onClick={() => setVisible(false)}>Cancelar</CButton>
             <CButton color="primary" type="submit">Guardar</CButton>
           </CModalFooter>
         </CForm>
       </CModal>
+
+      {/* ================== MODAL MENSAJE ================== */}
+      <CModal visible={visibleMsg} onClose={() => setVisibleMsg(false)}>
+        <CModalHeader>{msgContent.title}</CModalHeader>
+        <CModalBody><p>{msgContent.text}</p></CModalBody>
+        <CModalFooter>
+          <CButton color={msgContent.color} onClick={() => setVisibleMsg(false)}>Aceptar</CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* ================== MODAL CONFIRMAR ELIMINAR ================== */}
+      <CModal visible={visibleConfirm} onClose={() => setVisibleConfirm(false)}>
+        <CModalHeader>Confirmar Eliminación</CModalHeader>
+        <CModalBody>
+          <p>¿Está seguro que desea eliminar la producción "{produccionAEliminar?.producto}"?</p>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisibleConfirm(false)}>Cancelar</CButton>
+          <CButton color="danger" onClick={handleDeleteProduccion}>Eliminar</CButton>
+        </CModalFooter>
+      </CModal>
+
     </CCard>
   )
 }
