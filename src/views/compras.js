@@ -261,6 +261,141 @@ const Compras = () => {
       console.error('Error eliminar compra:', error)
     }
   }
+ 
+// FUNCION PARA IMPRIMIR FACTURA DE COMPRA
+const imprimirFacturaCompra = async (idCompra) => {
+  try {
+    const res = await fetch(`http://localhost:4000/api/compras/${idCompra}/detalle`)
+    if (!res.ok) throw new Error('Error al obtener la compra')
+
+    const detalles = await res.json()
+    if (!Array.isArray(detalles) || detalles.length === 0) {
+      showMessage('Atención', 'No hay detalles para esta compra', 'warning')
+      return
+    }
+
+    const total = detalles.reduce((acc, d) => acc + Number(d.tb_subtotal || 0), 0)
+    const proveedorNombre = detalles[0]?.tb_proveedor || 'Desconocido'
+    const fechaCompra = new Date(detalles[0]?.tb_fechcomp).toLocaleDateString('es-ES')
+
+    const facturaHTML = `
+      <html>
+        <head>
+          <title>Factura #${idCompra}</title>
+          <style>
+            body {
+              font-family: 'Helvetica', Arial, sans-serif;
+              margin: 40px;
+              color: #333;
+            }
+            h2 {
+              text-align: center;
+              font-size: 28px;
+              margin-bottom: 5px;
+            }
+            h4 {
+              text-align: center;
+              font-weight: normal;
+              margin-top: 0;
+              color: #555;
+            }
+            .info {
+              margin-top: 20px;
+              margin-bottom: 20px;
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+            }
+            .info p {
+              margin: 5px 0;
+              font-size: 14px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+            }
+            th, td {
+              border: 1px solid #aaa;
+              padding: 10px;
+              text-align: left;
+            }
+            th {
+              background-color: #f7f7f7;
+              font-weight: bold;
+              text-align: center;
+            }
+            td {
+              text-align: center;
+            }
+            .total {
+              margin-top: 20px;
+              text-align: right;
+              font-size: 20px;
+              font-weight: bold;
+              border-top: 2px solid #333;
+              padding-top: 10px;
+            }
+            hr {
+              margin-top: 30px;
+              margin-bottom: 30px;
+              border: none;
+              border-top: 2px solid #eee;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>FACTURA</h2>
+          <h4>Compra de Productos</h4>
+          <hr>
+
+          <div class="info">
+            <p><strong>Compra #:</strong> ${idCompra}</p>
+            <p><strong>Proveedor:</strong> ${proveedorNombre}</p>
+            <p><strong>Fecha:</strong> ${fechaCompra}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${detalles.map(d => `
+                <tr>
+                  <td>${d.nombre_producto}</td>
+                  <td>${d.tb_cantidad}</td>
+                  <td>$${Number(d.tb_precunic).toFixed(2)}</td>
+                  <td>$${Number(d.tb_subtotal).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="total">
+            Total: $${total.toFixed(2)}
+          </div>
+        </body>
+      </html>
+    `
+
+    const ventana = window.open('', '_blank')
+    ventana.document.write(facturaHTML)
+    ventana.document.close()
+    ventana.print()
+
+  } catch (err) {
+    showMessage('Error', 'No se pudo imprimir la factura', 'danger')
+    console.error(err)
+  }
+}
+
+
+
 
   // ================== DETALLE ==================
   const fetchDetalleCompra = async (id) => {
@@ -304,44 +439,74 @@ const Compras = () => {
           </CButton>
         </CCardHeader>
         <CCardBody>
-          <CTable bordered hover responsive>
-            <CTableHead color="light">
-              <CTableRow>
-                <CTableHeaderCell>#</CTableHeaderCell>
-                <CTableHeaderCell>Proveedor</CTableHeaderCell>
-                <CTableHeaderCell>Fecha</CTableHeaderCell>
-                <CTableHeaderCell>Total</CTableHeaderCell>
-                <CTableHeaderCell>Estado</CTableHeaderCell>
-                <CTableHeaderCell>Acciones</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {compras.map((compra) => (
-                <CTableRow key={compra.id}>
-                  <CTableDataCell>{compra.id}</CTableDataCell>
-                  <CTableDataCell>{getProveedorNombre(compra.proveedor_id)}</CTableDataCell>
-                  <CTableDataCell>{formatFechaHora(compra.fecha_compra)}</CTableDataCell>
-                  <CTableDataCell>${compra.total_compra.toFixed(2)}</CTableDataCell>
-                  <CTableDataCell>
-                    <CBadge color={estadoColors[compra.estado_compra]}>
-                      {compra.estado_compra}
-                    </CBadge>
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <CButton size="sm" color="info" onClick={() => fetchDetalleCompra(compra.id)}>
-                      Ver
-                    </CButton>{' '}
-                    <CButton size="sm" color="warning" onClick={() => handleEditCompra(compra)}>
-                      Editar
-                    </CButton>{' '}
-                    <CButton size="sm" color="danger" onClick={() => handleShowDeleteModal(compra)}>
-                      Eliminar
-                    </CButton>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
+          <CTable bordered hover responsive align="middle" className="text-center">
+  <CTableHead color="light">
+    <CTableRow>
+      <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+      <CTableHeaderCell className="text-center">Proveedor</CTableHeaderCell>
+      <CTableHeaderCell className="text-center">Fecha</CTableHeaderCell>
+      <CTableHeaderCell className="text-center">Total</CTableHeaderCell>
+      <CTableHeaderCell className="text-center">Estado</CTableHeaderCell>
+      <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
+    </CTableRow>
+  </CTableHead>
+
+  <CTableBody>
+    {compras.map((compra) => (
+      <CTableRow key={compra.id}>
+        <CTableDataCell className="fw-semibold">{compra.id}</CTableDataCell>
+        <CTableDataCell>{getProveedorNombre(compra.proveedor_id)}</CTableDataCell>
+        <CTableDataCell>{formatFechaHora(compra.fecha_compra)}</CTableDataCell>
+        <CTableDataCell className="fw-semibold">${compra.total_compra.toFixed(2)}</CTableDataCell>
+        <CTableDataCell>
+          <CBadge color={estadoColors[compra.estado_compra] || 'secondary'} className="px-3 py-1">
+            {compra.estado_compra}
+          </CBadge>
+        </CTableDataCell>
+        <CTableDataCell>
+          <div className="d-flex justify-content-center gap-1">
+            <CButton
+              size="sm"
+              color="info"
+              variant="ghost"
+              onClick={() => fetchDetalleCompra(compra.id)}
+            >
+              Ver
+            </CButton>
+
+            <CButton
+              size="sm"
+              color="warning"
+              variant="ghost"
+              onClick={() => handleEditCompra(compra)}
+            >
+              Editar
+            </CButton>
+
+            <CButton
+              size="sm"
+              color="danger"
+              variant="ghost"
+              onClick={() => handleShowDeleteModal(compra)}
+            >
+              Eliminar
+            </CButton>
+
+            <CButton
+              size="sm"
+              color="dark"
+              variant="ghost"
+              onClick={() => imprimirFacturaCompra(compra.id)}
+            >
+              PDF
+            </CButton>
+          </div>
+        </CTableDataCell>
+      </CTableRow>
+    ))}
+  </CTableBody>
+</CTable>
+
         </CCardBody>
       </CCard>
 
