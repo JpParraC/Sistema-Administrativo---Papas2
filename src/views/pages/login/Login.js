@@ -270,13 +270,7 @@ const Login = () => {
                   </CButton>
                 </CCol>
                 <CCol xs={12} className="mb-2">
-                  <CButton
-                    style={{ backgroundColor: '#F4F1BB', color: '#36C9C6', fontWeight: 600, border: '1px solid #36C9C6' }}
-                    className="px-4 w-100"
-                    onClick={() => setShowRegister(true)}
-                  >
-                    ¿No tienes cuenta? Regístrate
-                  </CButton>
+                 
                 </CCol>
                 <CCol xs={12}>
                   <CButton

@@ -19,13 +19,13 @@ const _nav = [
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
-    icon: <CIcon icon={cilChartPie} customClassName="nav-icon" />
+    icon: <CIcon icon={cilChartPie} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,
     name: 'Módulos Contables',
   },
-    {
+  {
     component: CNavItem,
     name: 'Proveedores',
     to: '/proveedores',
@@ -43,7 +43,6 @@ const _nav = [
     to: '/compras',
     icon: <CIcon icon={cilCart} customClassName="nav-icon" />,
   },
- 
   {
     component: CNavItem,
     name: 'Ventas',
@@ -56,7 +55,7 @@ const _nav = [
     to: '/inventario',
     icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
   },
-   {
+  {
     component: CNavItem,
     name: 'Producción',
     to: '/produccion',
@@ -68,7 +67,6 @@ const _nav = [
     to: '/personal',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
   },
-
   {
     component: CNavItem,
     name: 'Clientes',
@@ -77,19 +75,29 @@ const _nav = [
   },
   {
     component: CNavItem,
+    name: 'Usuarios',
+    to: '/usuarios',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Roles',
+    to: '/roles',
+    icon: <CIcon icon={cilBalanceScale} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
     name: 'Balance',
     to: '/balance',
     icon: <CIcon icon={cilBalanceScale} customClassName="nav-icon" />,
   },
-
   {
     component: CNavItem,
     name: 'Reportes',
     to: '/reportes',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
   },
-  
-   {
+  {
     component: CNavItem,
     name: 'Cargos',
     to: '/cargos',
