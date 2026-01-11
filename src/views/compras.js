@@ -44,7 +44,8 @@ const Compras = () => {
 
   const API_PROVEEDORES = 'http://localhost:4000/api/proveedores'
   const API_COMPRAS = 'http://localhost:4000/api/compras'
-  const API_PRODUCTOS = 'http://localhost:4000/api/productos'
+  const API_PRODUCTOS = 'http://localhost:4000/api/productos/insumo'
+
 
   // ================== FETCH DATA ==================
   const fetchProveedores = async () => {
@@ -63,19 +64,21 @@ const Compras = () => {
     try {
       const res = await fetch(API_PRODUCTOS)
       const data = await res.json()
-      const productosFiltrados = data.filter((p) => p.tma_tipo?.toLowerCase() === 'insumo')
       setProductos(
-        productosFiltrados.map((p) => ({
-          id: p.tma_idprodu,
-          nombre: p.tma_nombrep,
-          unidad: p.tma_unidade,
-          precio: Number(p.tma_preciou),
+        data.map((p) => ({
+          id: p.id,
+          nombre: p.nombre,
+          unidad: p.unidad || '',
+          precio: Number(p.precio) || 0, // convierte a número y evita NaN
         }))
       )
     } catch (error) {
       console.error('Error fetch productos:', error)
+      setProductos([])
     }
   }
+
+
 
   const fetchCompras = async () => {
     try {
@@ -261,24 +264,24 @@ const Compras = () => {
       console.error('Error eliminar compra:', error)
     }
   }
- 
-// FUNCION PARA IMPRIMIR FACTURA DE COMPRA
-const imprimirFacturaCompra = async (idCompra) => {
-  try {
-    const res = await fetch(`http://localhost:4000/api/compras/${idCompra}/detalle`)
-    if (!res.ok) throw new Error('Error al obtener la compra')
 
-    const detalles = await res.json()
-    if (!Array.isArray(detalles) || detalles.length === 0) {
-      showMessage('Atención', 'No hay detalles para esta compra', 'warning')
-      return
-    }
+  // FUNCION PARA IMPRIMIR FACTURA DE COMPRA
+  const imprimirFacturaCompra = async (idCompra) => {
+    try {
+      const res = await fetch(`http://localhost:4000/api/compras/${idCompra}/detalle`)
+      if (!res.ok) throw new Error('Error al obtener la compra')
 
-    const total = detalles.reduce((acc, d) => acc + Number(d.tb_subtotal || 0), 0)
-    const proveedorNombre = detalles[0]?.tb_proveedor || 'Desconocido'
-    const fechaCompra = new Date(detalles[0]?.tb_fechcomp).toLocaleDateString('es-ES')
+      const detalles = await res.json()
+      if (!Array.isArray(detalles) || detalles.length === 0) {
+        showMessage('Atención', 'No hay detalles para esta compra', 'warning')
+        return
+      }
 
-    const facturaHTML = `
+      const total = detalles.reduce((acc, d) => acc + Number(d.tb_subtotal || 0), 0)
+      const proveedorNombre = detalles[0]?.tb_proveedor || 'Desconocido'
+      const fechaCompra = new Date(detalles[0]?.tb_fechcomp).toLocaleDateString('es-ES')
+
+      const facturaHTML = `
       <html>
         <head>
           <title>Factura #${idCompra}</title>
@@ -383,16 +386,16 @@ const imprimirFacturaCompra = async (idCompra) => {
       </html>
     `
 
-    const ventana = window.open('', '_blank')
-    ventana.document.write(facturaHTML)
-    ventana.document.close()
-    ventana.print()
+      const ventana = window.open('', '_blank')
+      ventana.document.write(facturaHTML)
+      ventana.document.close()
+      ventana.print()
 
-  } catch (err) {
-    showMessage('Error', 'No se pudo imprimir la factura', 'danger')
-    console.error(err)
+    } catch (err) {
+      showMessage('Error', 'No se pudo imprimir la factura', 'danger')
+      console.error(err)
+    }
   }
-}
 
 
 
@@ -440,72 +443,72 @@ const imprimirFacturaCompra = async (idCompra) => {
         </CCardHeader>
         <CCardBody>
           <CTable bordered hover responsive align="middle" className="text-center">
-  <CTableHead color="light">
-    <CTableRow>
-      <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Proveedor</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Fecha</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Total</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Estado</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
-    </CTableRow>
-  </CTableHead>
+            <CTableHead color="light">
+              <CTableRow>
+                <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Proveedor</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Fecha</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Total</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Estado</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
 
-  <CTableBody>
-    {compras.map((compra) => (
-      <CTableRow key={compra.id}>
-        <CTableDataCell className="fw-semibold">{compra.id}</CTableDataCell>
-        <CTableDataCell>{getProveedorNombre(compra.proveedor_id)}</CTableDataCell>
-        <CTableDataCell>{formatFechaHora(compra.fecha_compra)}</CTableDataCell>
-        <CTableDataCell className="fw-semibold">${compra.total_compra.toFixed(2)}</CTableDataCell>
-        <CTableDataCell>
-          <CBadge color={estadoColors[compra.estado_compra] || 'secondary'} className="px-3 py-1">
-            {compra.estado_compra}
-          </CBadge>
-        </CTableDataCell>
-        <CTableDataCell>
-          <div className="d-flex justify-content-center gap-1">
-            <CButton
-              size="sm"
-              color="info"
-              variant="ghost"
-              onClick={() => fetchDetalleCompra(compra.id)}
-            >
-              Ver
-            </CButton>
+            <CTableBody>
+              {compras.map((compra) => (
+                <CTableRow key={compra.id}>
+                  <CTableDataCell className="fw-semibold">{compra.id}</CTableDataCell>
+                  <CTableDataCell>{getProveedorNombre(compra.proveedor_id)}</CTableDataCell>
+                  <CTableDataCell>{formatFechaHora(compra.fecha_compra)}</CTableDataCell>
+                  <CTableDataCell className="fw-semibold">${compra.total_compra.toFixed(2)}</CTableDataCell>
+                  <CTableDataCell>
+                    <CBadge color={estadoColors[compra.estado_compra] || 'secondary'} className="px-3 py-1">
+                      {compra.estado_compra}
+                    </CBadge>
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex justify-content-center gap-1">
+                      <CButton
+                        size="sm"
+                        color="info"
+                        variant="ghost"
+                        onClick={() => fetchDetalleCompra(compra.id)}
+                      >
+                        Ver
+                      </CButton>
 
-            <CButton
-              size="sm"
-              color="warning"
-              variant="ghost"
-              onClick={() => handleEditCompra(compra)}
-            >
-              Editar
-            </CButton>
+                      <CButton
+                        size="sm"
+                        color="warning"
+                        variant="ghost"
+                        onClick={() => handleEditCompra(compra)}
+                      >
+                        Editar
+                      </CButton>
 
-            <CButton
-              size="sm"
-              color="danger"
-              variant="ghost"
-              onClick={() => handleShowDeleteModal(compra)}
-            >
-              Eliminar
-            </CButton>
+                      <CButton
+                        size="sm"
+                        color="danger"
+                        variant="ghost"
+                        onClick={() => handleShowDeleteModal(compra)}
+                      >
+                        Eliminar
+                      </CButton>
 
-            <CButton
-              size="sm"
-              color="dark"
-              variant="ghost"
-              onClick={() => imprimirFacturaCompra(compra.id)}
-            >
-              PDF
-            </CButton>
-          </div>
-        </CTableDataCell>
-      </CTableRow>
-    ))}
-  </CTableBody>
-</CTable>
+                      <CButton
+                        size="sm"
+                        color="dark"
+                        variant="ghost"
+                        onClick={() => imprimirFacturaCompra(compra.id)}
+                      >
+                        PDF
+                      </CButton>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
 
         </CCardBody>
       </CCard>
