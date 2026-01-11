@@ -8,13 +8,15 @@ import {
 } from '@coreui/react'
 
 // ================== API ==================
-const API_PRODUCTOS = 'http://localhost:4000/api/productos'
+const API_PRODUCTOS_COSECHA = 'http://localhost:4000/api/productos/cosecha'
+const API_PRODUCTOS_INSUMO = 'http://localhost:4000/api/productos/insumo'
 const API_PERSONAL = 'http://localhost:4000/api/personal'
 const API_PRODUCCION = 'http://localhost:4000/api/producc'
 
 const Produccion = () => {
   const [produccion, setProduccion] = useState([])
-  const [productos, setProductos] = useState([])
+  const [productosCosecha, setProductosCosecha] = useState([])
+  const [productosInsumo, setProductosInsumo] = useState([])
   const [personal, setPersonal] = useState([])
   const [visible, setVisible] = useState(false)
 
@@ -27,6 +29,7 @@ const Produccion = () => {
     area_cultivo: '',
     costo_produccion: '',
     responsable_id: '',
+    insumos: [],
     tb_idproduc: null,
   })
 
@@ -49,9 +52,10 @@ const Produccion = () => {
 
   // ================== CARGA INICIAL ==================
   useEffect(() => {
-    fetchProductos()
-    fetchPersonal()
     fetchProduccion()
+    fetchProductosCosecha()
+    fetchProductosInsumo()
+    fetchPersonal()
   }, [])
 
   // ================== FETCH ==================
@@ -67,15 +71,25 @@ const Produccion = () => {
     }
   }
 
-  const fetchProductos = async () => {
+  const fetchProductosCosecha = async () => {
     try {
-      const res = await fetch(API_PRODUCTOS)
+      const res = await fetch(API_PRODUCTOS_COSECHA)
       const data = await res.json()
-      setProductos(Array.isArray(data) ? data : [])
+      setProductosCosecha(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.error('Error cargando productos', error)
-      showMessage('Error', 'No se pudieron cargar los productos', 'danger')
-      setProductos([])
+      console.error('Error cargando productos de cosecha', error)
+      showMessage('Error', 'No se pudieron cargar los productos de cosecha', 'danger')
+    }
+  }
+
+  const fetchProductosInsumo = async () => {
+    try {
+      const res = await fetch(API_PRODUCTOS_INSUMO)
+      const data = await res.json()
+      setProductosInsumo(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error cargando productos de insumo', error)
+      showMessage('Error', 'No se pudieron cargar los productos de insumo', 'danger')
     }
   }
 
@@ -96,10 +110,28 @@ const Produccion = () => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
+  const handleInsumoChange = (index, field, value) => {
+    const newInsumos = [...form.insumos]
+    newInsumos[index][field] = value
+    setForm({ ...form, insumos: newInsumos })
+  }
+
+  const addInsumo = () => {
+    setForm({
+      ...form,
+      insumos: [...form.insumos, { producto_id: '', cantidad: 0 }]
+    })
+  }
+
+  const removeInsumo = (index) => {
+    const newInsumos = [...form.insumos]
+    newInsumos.splice(index, 1)
+    setForm({ ...form, insumos: newInsumos })
+  }
+
   // ================== CREAR / EDITAR ==================
   const handleAddProduccion = async (e) => {
     e.preventDefault()
-
     try {
       const payload = {
         tb_idprodut: Number(form.tb_idprodut),
@@ -110,6 +142,10 @@ const Produccion = () => {
         tb_areacult: Number(form.area_cultivo),
         tb_costprod: Number(form.costo_produccion),
         tb_idrespon: Number(form.responsable_id),
+        insumos: form.insumos.map(i => ({
+          producto_id: Number(i.producto_id),
+          cantidad: Number(i.cantidad)
+        }))
       }
 
       let res
@@ -140,6 +176,7 @@ const Produccion = () => {
         area_cultivo: '',
         costo_produccion: '',
         responsable_id: '',
+        insumos: [],
         tb_idproduc: null,
       })
 
@@ -165,6 +202,8 @@ const Produccion = () => {
       return `${year}-${month}-${day}`
     }
 
+    const insumos = item.insumos || []
+
     setForm({
       tb_idprodut: item.tb_idprodut,
       fecha_siembra: formatDate(item.fecha_siembra),
@@ -174,6 +213,7 @@ const Produccion = () => {
       area_cultivo: item.area_cultivo,
       costo_produccion: item.costo_produccion,
       responsable_id: item.tb_idrespon,
+      insumos,
       tb_idproduc: item.id,
     })
 
@@ -183,7 +223,6 @@ const Produccion = () => {
   // ================== ELIMINAR ==================
   const handleDeleteProduccion = async () => {
     if (!produccionAEliminar) return
-
     try {
       const res = await fetch(`${API_PRODUCCION}/${produccionAEliminar.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Error al eliminar producción')
@@ -198,9 +237,6 @@ const Produccion = () => {
       setProduccionAEliminar(null)
     }
   }
-
-  // ================== DATA DERIVADA ==================
-  const productosCosecha = productos.filter(p => p.tma_tipo === 'cosecha')
 
   return (
     <CCard>
@@ -265,7 +301,7 @@ const Produccion = () => {
       </CCardBody>
 
       {/* ================== MODAL CREAR / EDITAR ================== */}
-      <CModal visible={visible} onClose={() => setVisible(false)}>
+      <CModal visible={visible} onClose={() => setVisible(false)} size="lg">
         <CModalHeader>
           <strong>{form.tb_idproduc ? 'Editar Producción' : 'Nueva Producción'}</strong>
         </CModalHeader>
@@ -280,7 +316,7 @@ const Produccion = () => {
             >
               <option value="">Seleccione producto</option>
               {productosCosecha.map(p => (
-                <option key={p.tma_idprodu} value={p.tma_idprodu}>{p.tma_nombrep}</option>
+                <option key={p.id} value={p.id}>{p.nombre}</option>
               ))}
             </CFormSelect>
 
@@ -294,6 +330,47 @@ const Produccion = () => {
               <option value="">Seleccione responsable</option>
               {personal.map(p => <option key={p.tma_idperso} value={p.tma_idperso}>{p.tma_nombrep}</option>)}
             </CFormSelect>
+
+
+            {/* ================== INSUMOS ================== */}
+            <div className="mt-3">
+              <h6>Insumos usados</h6>
+              {form.insumos.map((i, idx) => (
+                <div key={idx} className="d-flex align-items-center mb-2 gap-2">
+                  <CFormSelect
+                    value={i.producto_id}
+                    onChange={(e) => handleInsumoChange(idx, 'producto_id', e.target.value)}
+                    required
+                  >
+                    <option value="">Seleccione insumo</option>
+                    {productosInsumo.map(p => (
+                      <option
+                        key={p.id}
+                        value={p.id}
+                        disabled={p.stock === 0} // deshabilita si no hay stock
+                      >
+                        {p.nombre} {p.stock > 0 ? `(Disponible: ${p.stock})` : '(Falta comprar)'}
+                      </option>
+                    ))}
+                  </CFormSelect>
+
+                  <CFormInput
+                    type="number"
+                    placeholder="Cantidad"
+                    value={i.cantidad}
+                    onChange={(e) => handleInsumoChange(idx, 'cantidad', e.target.value)}
+                    min={0}
+                    max={i.producto_id ? productosInsumo.find(p => p.id === Number(i.producto_id))?.stock || 0 : undefined}
+                    required
+                  />
+
+                  <CButton color="danger" size="sm" onClick={() => removeInsumo(idx)}>Eliminar</CButton>
+                </div>
+              ))}
+
+              <CButton color="secondary" size="sm" onClick={addInsumo}>+ Agregar Insumo</CButton>
+            </div>
+
           </CModalBody>
 
           <CModalFooter>
@@ -323,7 +400,6 @@ const Produccion = () => {
           <CButton color="danger" onClick={handleDeleteProduccion}>Eliminar</CButton>
         </CModalFooter>
       </CModal>
-
     </CCard>
   )
 }

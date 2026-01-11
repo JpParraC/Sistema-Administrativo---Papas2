@@ -15,17 +15,28 @@ const Productos = () => {
     descripcion: '',
     unidad: '',
     precio: '',
-    stock: '',
-    tipo: ''          // <<--- NUEVO CAMPO
+    tipo: ''
   })
 
   const API_PRODUCTOS = 'http://localhost:4000/api/productos'
 
+  // ===================== FETCH Y NORMALIZACION =====================
   const fetchProductos = async () => {
     try {
       const res = await fetch(API_PRODUCTOS)
       const data = await res.json()
-      setProductos(data)
+
+      // Normalizar campos para evitar errores con undefined
+      const productosNormalizados = (Array.isArray(data) ? data : []).map(p => ({
+        id: p.id,
+        nombre: p.nombre || '',
+        descripcion: p.descripcion || '',
+        unidad: p.unidad || '',
+        precio: p.precio || 0,
+        tipo: p.tipo || ''
+      }))
+
+      setProductos(productosNormalizados)
     } catch (err) {
       console.error('Error obteniendo productos:', err)
     }
@@ -35,6 +46,7 @@ const Productos = () => {
     fetchProductos()
   }, [])
 
+  // ===================== FORMULARIO =====================
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -42,18 +54,21 @@ const Productos = () => {
   const handleOpenModal = (producto = null) => {
     if (producto) {
       setForm({
-        id: producto.tma_idprodu,
-        nombre: producto.tma_nombrep,
-        descripcion: producto.tma_descrip,
-        unidad: producto.tma_unidade,
-        precio: producto.tma_preciou,
-        stock: producto.tma_stockmi,
-        tipo: producto.tma_tipo           // <<--- CAPTURA EL TIPO
+        id: producto.id,
+        nombre: producto.nombre,
+        descripcion: producto.descripcion,
+        unidad: producto.unidad,
+        precio: producto.precio,
+        tipo: producto.tipo
       })
     } else {
       setForm({
-        id: null, nombre: '', descripcion: '', unidad: '',
-        precio: '', stock: '', tipo: ''
+        id: null,
+        nombre: '',
+        descripcion: '',
+        unidad: '',
+        precio: '',
+        tipo: ''
       })
     }
     setVisibleModal(true)
@@ -73,8 +88,7 @@ const Productos = () => {
           descripcion: form.descripcion,
           unidad: form.unidad,
           precio: parseFloat(form.precio),
-          stock: parseInt(form.stock),
-          tipo: form.tipo                    // <<--- ENVIA EL TIPO
+          tipo: form.tipo
         })
       })
 
@@ -95,13 +109,15 @@ const Productos = () => {
     }
   }
 
+  // ===================== FILTRO =====================
   const filteredProductos = productos.filter(p =>
-    p.tma_nombrep.toLowerCase().includes(search.toLowerCase()) ||
-    p.tma_descrip.toLowerCase().includes(search.toLowerCase()) ||
-    p.tma_unidade.toLowerCase().includes(search.toLowerCase()) ||
-    (p.tma_tipo || "").toLowerCase().includes(search.toLowerCase())   // <<--- SE AGREGA A FILTRO
+    p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+    p.descripcion.toLowerCase().includes(search.toLowerCase()) ||
+    p.unidad.toLowerCase().includes(search.toLowerCase()) ||
+    p.tipo.toLowerCase().includes(search.toLowerCase())
   )
 
+  // ===================== RENDER =====================
   return (
     <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -110,7 +126,6 @@ const Productos = () => {
       </CCardHeader>
 
       <CCardBody>
-
         <CFormInput
           className="mb-3"
           placeholder="Buscar producto..."
@@ -126,30 +141,33 @@ const Productos = () => {
               <CTableHeaderCell>Descripción</CTableHeaderCell>
               <CTableHeaderCell>Unidad</CTableHeaderCell>
               <CTableHeaderCell>Precio</CTableHeaderCell>
-              <CTableHeaderCell>Stock</CTableHeaderCell>
-              <CTableHeaderCell>Tipo</CTableHeaderCell> {/* NUEVA COLUMNA */}
+              <CTableHeaderCell>Tipo</CTableHeaderCell>
               <CTableHeaderCell>Acciones</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
 
           <CTableBody>
-            {filteredProductos.map((prod, idx) => (
-              <CTableRow key={prod.tma_idprodu}>
+            {filteredProductos.length === 0 ? (
+              <CTableRow>
+                <CTableDataCell colSpan={8} className="text-center text-muted">
+                  No hay productos.
+                </CTableDataCell>
+              </CTableRow>
+            ) : filteredProductos.map((prod, idx) => (
+              <CTableRow key={prod.id}>
                 <CTableDataCell>{idx + 1}</CTableDataCell>
-                <CTableDataCell>{prod.tma_nombrep}</CTableDataCell>
-                <CTableDataCell>{prod.tma_descrip}</CTableDataCell>
-                <CTableDataCell>{prod.tma_unidade}</CTableDataCell>
-                <CTableDataCell>${Number(prod.tma_preciou).toFixed(2)}</CTableDataCell>
-                <CTableDataCell>{prod.tma_stockmi}</CTableDataCell>
-                <CTableDataCell>{prod.tma_tipo}</CTableDataCell> {/* MOSTRAR TIPO */}
+                <CTableDataCell>{prod.nombre}</CTableDataCell>
+                <CTableDataCell>{prod.descripcion}</CTableDataCell>
+                <CTableDataCell>{prod.unidad}</CTableDataCell>
+                <CTableDataCell>${Number(prod.precio).toFixed(2)}</CTableDataCell>
+                <CTableDataCell>{prod.tipo}</CTableDataCell>
                 <CTableDataCell>
                   <CButton size="sm" color="info" className="me-2" onClick={() => handleOpenModal(prod)}>Editar</CButton>
-                  <CButton size="sm" color="danger" onClick={() => handleDeleteProducto(prod.tma_idprodu)}>Eliminar</CButton>
+                  <CButton size="sm" color="danger" onClick={() => handleDeleteProducto(prod.id)}>Eliminar</CButton>
                 </CTableDataCell>
               </CTableRow>
             ))}
           </CTableBody>
-
         </CTable>
       </CCardBody>
 
@@ -158,14 +176,12 @@ const Productos = () => {
         <CModalHeader>{form.id ? 'Editar Producto' : 'Nuevo Producto'}</CModalHeader>
         <CForm onSubmit={handleSaveProducto}>
           <CModalBody>
-
             <CFormInput className="mb-2" label="Nombre" name="nombre" value={form.nombre} onChange={handleInputChange} required />
             <CFormInput className="mb-2" label="Descripción" name="descripcion" value={form.descripcion} onChange={handleInputChange} />
             <CFormInput className="mb-2" label="Unidad" name="unidad" value={form.unidad} onChange={handleInputChange} required />
             <CFormInput className="mb-2" type="number" label="Precio" name="precio" step="0.01" value={form.precio} onChange={handleInputChange} required />
-            <CFormInput className="mb-2" type="number" label="Stock" name="stock" value={form.stock} onChange={handleInputChange} required />
+           
 
-            {/* SELECT DEL TIPO */}
             <CFormSelect
               className="mb-2"
               label="Tipo de Producto"
@@ -178,7 +194,6 @@ const Productos = () => {
               <option value="insumo">Insumo</option>
               <option value="cosecha">Cosecha</option>
             </CFormSelect>
-
           </CModalBody>
 
           <CModalFooter>
