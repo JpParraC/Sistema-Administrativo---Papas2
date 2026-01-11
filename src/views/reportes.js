@@ -5,6 +5,9 @@ import {
   CModalBody, CModalFooter, CForm, CFormInput, CFormTextarea,
   CFormSelect, CBadge, CInputGroup, CInputGroupText
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilInfo } from '@coreui/icons'
+import Swal from 'sweetalert2' // ✅ SweetAlert2
 
 const API_URL = 'http://localhost:4000/api/reportes'
 const API_PERSONAL = 'http://localhost:4000/api/personal'
@@ -31,23 +34,6 @@ const Reportes = () => {
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('')
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('')
 
-  // ================= MODALES =================
-  const [visibleMsg, setVisibleMsg] = useState(false)
-  const [msgContent, setMsgContent] = useState({ title: '', text: '', color: 'info' })
-
-  const [visibleConfirm, setVisibleConfirm] = useState(false)
-  const [reporteAEliminar, setReporteAEliminar] = useState(null)
-
-  const showMessage = (title, text, color = 'info') => {
-    setMsgContent({ title, text, color })
-    setVisibleMsg(true)
-  }
-
-  const showConfirm = (reporte) => {
-    setReporteAEliminar(reporte)
-    setVisibleConfirm(true)
-  }
-
   // ================= FETCH REPORTES =================
   const fetchReportes = async () => {
     setLoading(true)
@@ -66,7 +52,7 @@ const Reportes = () => {
     } catch (err) {
       console.error(err)
       setError('No se pudieron cargar los reportes')
-      showMessage('Error', 'No se pudieron cargar los reportes', 'danger')
+      Swal.fire('Error', 'No se pudieron cargar los reportes', 'error')
       setReportes([])
     } finally {
       setLoading(false)
@@ -82,7 +68,7 @@ const Reportes = () => {
       setPersonal(data)
     } catch (err) {
       console.error(err)
-      showMessage('Error', 'No se pudo cargar el personal', 'danger')
+      Swal.fire('Error', 'No se pudo cargar el personal', 'error')
     }
   }
 
@@ -126,10 +112,14 @@ const Reportes = () => {
         generado_por: ''
       })
       fetchReportes()
-      showMessage('Éxito', form.id ? 'Reporte actualizado correctamente' : 'Reporte creado correctamente', 'success')
+      Swal.fire(
+        'Éxito',
+        form.id ? 'Reporte actualizado correctamente' : 'Reporte creado correctamente',
+        'success'
+      )
     } catch (err) {
       console.error(err)
-      showMessage('Error', err.message || 'No se pudo guardar el reporte', 'danger')
+      Swal.fire('Error', err.message || 'No se pudo guardar el reporte', 'error')
     }
   }
 
@@ -137,22 +127,31 @@ const Reportes = () => {
   const handleVerMas = (reporte) => setReporteSeleccionado(reporte)
   const handleCerrarVerMas = () => setReporteSeleccionado(null)
 
-  const handleEliminar = async () => {
-    if (!reporteAEliminar) return
+  const handleEliminar = async (reporte) => {
+    const result = await Swal.fire({
+      title: `Eliminar reporte "${reporte.nombre_reporte}"?`,
+      text: 'No podrás revertir esta acción',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    })
+
+    if (!result.isConfirmed) return
+
     try {
-      const response = await fetch(`${API_URL}/${reporteAEliminar.id}`, { method: 'DELETE' })
+      const response = await fetch(`${API_URL}/${reporte.id}`, { method: 'DELETE' })
       if (!response.ok) {
         const err = await response.json()
         throw new Error(err.message || 'Error al eliminar')
       }
       fetchReportes()
-      showMessage('Éxito', 'Reporte eliminado correctamente', 'success')
+      Swal.fire('Éxito', 'Reporte eliminado correctamente', 'success')
     } catch (err) {
       console.error(err)
-      showMessage('Error', err.message || 'No se pudo eliminar el reporte', 'danger')
-    } finally {
-      setVisibleConfirm(false)
-      setReporteAEliminar(null)
+      Swal.fire('Error', err.message || 'No se pudo eliminar el reporte', 'error')
     }
   }
 
@@ -220,10 +219,16 @@ const Reportes = () => {
                 <CTableDataCell style={{ fontFamily: 'monospace' }}>{item.fecha_generacion?.slice(0, 10)}</CTableDataCell>
                 <CTableDataCell>{item.contenido_reporte?.length > 60 ? item.contenido_reporte.slice(0, 60) + '...' : item.contenido_reporte}</CTableDataCell>
                 <CTableDataCell><CBadge color="secondary">{item.nombre_personal || 'Desconocido'}</CBadge></CTableDataCell>
-                <CTableDataCell>
-                  <CButton size="sm" color="info" className="me-1" onClick={() => handleVerMas(item)}>Ver más</CButton>
-                  <CButton size="sm" color="warning" className="me-1" onClick={() => handleEditar(item)}>Editar</CButton>
-                  <CButton size="sm" color="danger" onClick={() => showConfirm(item)}>Eliminar</CButton>
+                <CTableDataCell className="d-flex gap-2">
+                  <CButton color="info" size="sm" onClick={() => handleVerMas(item)}>
+                    <CIcon icon={cilInfo} />
+                  </CButton>
+                  <CButton color="warning" size="sm" onClick={() => handleEditar(item)}>
+                    <CIcon icon={cilPencil} />
+                  </CButton>
+                  <CButton color="danger" size="sm" onClick={() => handleEliminar(item)}>
+                    <CIcon icon={cilTrash} />
+                  </CButton>
                 </CTableDataCell>
               </CTableRow>
             ))}
@@ -270,29 +275,6 @@ const Reportes = () => {
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={handleCerrarVerMas}>Cerrar</CButton>
-        </CModalFooter>
-      </CModal>
-
-      {/* ================= MODAL MENSAJES ================= */}
-      <CModal visible={visibleMsg} onClose={() => setVisibleMsg(false)}>
-        <CModalHeader>{msgContent.title}</CModalHeader>
-        <CModalBody>
-          <p>{msgContent.text}</p>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color={msgContent.color} onClick={() => setVisibleMsg(false)}>Aceptar</CButton>
-        </CModalFooter>
-      </CModal>
-
-      {/* ================= MODAL CONFIRMAR ELIMINAR ================= */}
-      <CModal visible={visibleConfirm} onClose={() => setVisibleConfirm(false)}>
-        <CModalHeader>Confirmar Eliminación</CModalHeader>
-        <CModalBody>
-          <p>¿Está seguro que desea eliminar el reporte "{reporteAEliminar?.nombre_reporte}"?</p>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setVisibleConfirm(false)}>Cancelar</CButton>
-          <CButton color="danger" onClick={handleEliminar}>Eliminar</CButton>
         </CModalFooter>
       </CModal>
 
