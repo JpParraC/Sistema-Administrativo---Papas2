@@ -18,6 +18,9 @@ import {
   CForm,
   CFormInput,
 } from '@coreui/react'
+import { CIcon } from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilPlus } from '@coreui/icons'
+import Swal from 'sweetalert2'
 
 const Roles = () => {
   const [roles, setRoles] = useState([])
@@ -27,14 +30,35 @@ const Roles = () => {
 
   const API_ROLES = 'http://localhost:4000/api/roles'
 
+  // Alertas SweetAlert
+  const alertSuccess = (title, text) => {
+    Swal.fire({
+      icon: 'success',
+      title,
+      text,
+      timer: 1800,
+      showConfirmButton: false,
+    })
+  }
+
+  const alertError = (text) => {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text,
+    })
+  }
+
   // Traer roles desde el backend
   const fetchRoles = async () => {
     try {
       const res = await fetch(API_ROLES)
+      if (!res.ok) throw new Error('Error obteniendo roles')
       const data = await res.json()
       setRoles(data)
     } catch (err) {
-      console.error('Error obteniendo roles:', err)
+      console.error(err)
+      alertError('No se pudieron obtener los roles')
     }
   }
 
@@ -61,26 +85,49 @@ const Roles = () => {
       const method = form.id ? 'PUT' : 'POST'
       const url = form.id ? `${API_ROLES}/${form.id}` : API_ROLES
 
-      await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rol_name: form.rol_name }),
       })
 
+      if (!res.ok) throw new Error('Error guardando rol')
+
       fetchRoles()
       setVisibleModal(false)
+      alertSuccess(
+        'Correcto',
+        form.id ? 'Rol actualizado correctamente' : 'Rol creado correctamente'
+      )
     } catch (err) {
-      console.error('Error guardando rol:', err)
+      console.error(err)
+      alertError('No se pudo guardar el rol')
     }
   }
 
   const handleDeleteRole = async (id) => {
-    if (!window.confirm('¿Deseas eliminar este rol?')) return
+    const result = await Swal.fire({
+      title: '¿Eliminar rol?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    })
+
+    if (!result.isConfirmed) return
+
     try {
-      await fetch(`${API_ROLES}/${id}`, { method: 'DELETE' })
+      const res = await fetch(`${API_ROLES}/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al eliminar rol')
+
       fetchRoles()
+      alertSuccess('Eliminado', 'El rol fue eliminado correctamente')
     } catch (err) {
-      console.error('Error eliminando rol:', err)
+      console.error(err)
+      alertError('No se pudo eliminar el rol')
     }
   }
 
@@ -90,84 +137,95 @@ const Roles = () => {
   )
 
   return (
-    <CCard>
-      <CCardHeader className="d-flex justify-content-between align-items-center">
-        <h5>Roles</h5>
-        <CButton color="primary" onClick={() => handleOpenModal()}>
-          + Nuevo Rol
-        </CButton>
-      </CCardHeader>
+    <div className="d-flex justify-content-center mt-4">
+      <div style={{ width: '750px' }}>
+        <CCard>
+          <CCardHeader className="d-flex justify-content-between align-items-center">
+            <h5>Roles</h5>
+            <CButton color="primary" size="sm" onClick={() => handleOpenModal()}>
+              <CIcon icon={cilPlus} /> {/* Icono de + Nuevo Rol */}
+            </CButton>
+          </CCardHeader>
 
-      <CCardBody>
-        <CFormInput
-          className="mb-3"
-          placeholder="Buscar rol..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <CTable hover responsive bordered>
-          <CTableHead color="light">
-            <CTableRow>
-              <CTableHeaderCell>#</CTableHeaderCell>
-              <CTableHeaderCell>Nombre del Rol</CTableHeaderCell>
-              <CTableHeaderCell>Acciones</CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-
-          <CTableBody>
-            {filteredRoles.map((rol, idx) => (
-              <CTableRow key={rol.id}>
-                <CTableDataCell>{idx + 1}</CTableDataCell>
-                <CTableDataCell>{rol.rol_name}</CTableDataCell>
-                <CTableDataCell>
-                  <CButton
-                    size="sm"
-                    color="info"
-                    className="me-2"
-                    onClick={() => handleOpenModal(rol)}
-                  >
-                    Editar
-                  </CButton>
-                  <CButton
-                    size="sm"
-                    color="danger"
-                    onClick={() => handleDeleteRole(rol.id)}
-                  >
-                    Eliminar
-                  </CButton>
-                </CTableDataCell>
-              </CTableRow>
-            ))}
-          </CTableBody>
-        </CTable>
-      </CCardBody>
-
-      {/* Modal */}
-      <CModal visible={visibleModal} onClose={() => setVisibleModal(false)}>
-        <CModalHeader>{form.id ? 'Editar Rol' : 'Nuevo Rol'}</CModalHeader>
-        <CForm onSubmit={handleSaveRole}>
-          <CModalBody>
+          <CCardBody>
             <CFormInput
-              className="mb-2"
-              label="Nombre del Rol"
-              name="rol_name"
-              value={form.rol_name}
-              onChange={handleInputChange}
-              required
+              className="mb-3"
+              placeholder="Buscar rol..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              size="sm"
             />
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="secondary" onClick={() => setVisibleModal(false)}>
-              Cancelar
-            </CButton>
-            <CButton color="primary" type="submit">
-              Guardar
-            </CButton>
-          </CModalFooter>
-        </CForm>
-      </CModal>
-    </CCard>
+
+            <CTable hover responsive bordered small className="text-center align-middle">
+              <CTableHead color="light">
+                <CTableRow>
+                  <CTableHeaderCell style={{ width: '40px' }}>#</CTableHeaderCell>
+                  <CTableHeaderCell>Nombre del Rol</CTableHeaderCell>
+                  <CTableHeaderCell style={{ width: '100px' }}>Acciones</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                {filteredRoles.map((rol, idx) => (
+                  <CTableRow key={rol.id}>
+                    <CTableDataCell>{idx + 1}</CTableDataCell>
+                    <CTableDataCell>{rol.rol_name}</CTableDataCell>
+                    <CTableDataCell>
+                      <div className="d-flex justify-content-center gap-1">
+                        {/* Botón Editar con icono */}
+                        <CButton
+                          size="sm"
+                          color="info"
+                          onClick={() => handleOpenModal(rol)}
+                          title="Editar rol"
+                        >
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+
+                        {/* Botón Eliminar con icono */}
+                        <CButton
+                          size="sm"
+                          color="danger"
+                          onClick={() => handleDeleteRole(rol.id)}
+                          title="Eliminar rol"
+                        >
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </div>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))}
+              </CTableBody>
+            </CTable>
+          </CCardBody>
+
+          {/* Modal */}
+          <CModal visible={visibleModal} onClose={() => setVisibleModal(false)}>
+            <CModalHeader>{form.id ? 'Editar Rol' : 'Nuevo Rol'}</CModalHeader>
+            <CForm onSubmit={handleSaveRole}>
+              <CModalBody>
+                <CFormInput
+                  className="mb-2"
+                  label="Nombre del Rol"
+                  name="rol_name"
+                  value={form.rol_name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </CModalBody>
+              <CModalFooter>
+                <CButton color="secondary" size="sm" onClick={() => setVisibleModal(false)}>
+                  Cancelar
+                </CButton>
+                <CButton color="primary" size="sm" type="submit">
+                  Guardar
+                </CButton>
+              </CModalFooter>
+            </CForm>
+          </CModal>
+        </CCard>
+      </div>
+    </div>
   )
 }
 

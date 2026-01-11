@@ -18,6 +18,9 @@ import {
   CFormInput,
   CBadge,
 } from '@coreui/react'
+import Swal from 'sweetalert2'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash } from '@coreui/icons'
 
 const Proveedores = () => {
   const [proveedores, setProveedores] = useState([])
@@ -110,38 +113,53 @@ const Proveedores = () => {
 
   // Agregar proveedor
   const handleAddProveedor = async (e) => {
-    e.preventDefault()
+  e.preventDefault()
 
-    if (!validateForm()) return
+  if (!validateForm()) return
 
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
 
-      const nuevoProveedor = await res.json()
+    const nuevoProveedor = await res.json()
 
-      setProveedores([
-        ...proveedores,
-        {
-          id: nuevoProveedor.tma_idprove,
-          rif: nuevoProveedor.tma_rif,
-          nombre: nuevoProveedor.tma_nombrep,
-          direccion: nuevoProveedor.tma_direcc,
-          telefono: nuevoProveedor.tma_telefon,
-          email: nuevoProveedor.tma_emailpro,
-        },
-      ])
+    setProveedores([
+      ...proveedores,
+      {
+        id: nuevoProveedor.tma_idprove,
+        rif: nuevoProveedor.tma_rif,
+        nombre: nuevoProveedor.tma_nombrep,
+        direccion: nuevoProveedor.tma_direcc,
+        telefono: nuevoProveedor.tma_telefon,
+        email: nuevoProveedor.tma_emailpro,
+      },
+    ])
 
-      setVisible(false)
-      setForm({ rif: '', nombre: '', direccion: '', telefono: '', email: '' })
-      setErrors({})
-    } catch (err) {
-      console.error('Error creando proveedor:', err)
-    }
+    setVisible(false)
+    setForm({ rif: '', nombre: '', direccion: '', telefono: '', email: '' })
+    setErrors({})
+
+    // SweetAlert2 de éxito
+    Swal.fire({
+      icon: 'success',
+      title: 'Proveedor creado',
+      text: `El proveedor "${nuevoProveedor.tma_nombrep}" se ha agregado correctamente.`,
+      timer: 1800,
+      showConfirmButton: false,
+    })
+  } catch (err) {
+    console.error('Error creando proveedor:', err)
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Ocurrió un error al crear el proveedor. 😓',
+    })
   }
+}
+
 
   // Abrir modal de edición
   const handleEditProveedor = (proveedor) => {
@@ -158,64 +176,125 @@ const Proveedores = () => {
   }
 
   // Actualizar proveedor
-  const handleUpdateProveedor = async (e) => {
-    e.preventDefault()
-    try {
-      const res = await fetch(`${API_URL}/${selectedProveedor.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rif: form.rif,
-          nombre: form.nombre,
-          direccion: form.direccion,
-          telefono: form.telefono,
-          email: form.email,
-        }),
-      })
-      const updatedProveedor = await res.json()
-      setProveedores(
-        proveedores.map((p) =>
-          p.id === updatedProveedor.tma_idprove
-            ? {
-                id: updatedProveedor.tma_idprove,
-                rif: updatedProveedor.tma_rif,
-                nombre: updatedProveedor.tma_nombrep,
-                direccion: updatedProveedor.tma_direcc,
-                telefono: updatedProveedor.tma_telefon,
-                email: updatedProveedor.tma_emailpro,
-              }
-            : p,
-        ),
+ const handleUpdateProveedor = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await fetch(`${API_URL}/${selectedProveedor.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rif: form.rif,
+        nombre: form.nombre,
+        direccion: form.direccion,
+        telefono: form.telefono,
+        email: form.email,
+      }),
+    });
+
+    const updatedProveedor = await res.json();
+
+    if (!res.ok) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: updatedProveedor.error || 'No se pudo actualizar el proveedor.',
+      });
+      return;
+    }
+
+    // Actualizar la lista en el estado
+    setProveedores(
+      proveedores.map((p) =>
+        p.id === updatedProveedor.tma_idprove
+          ? {
+              id: updatedProveedor.tma_idprove,
+              rif: updatedProveedor.tma_rif,
+              nombre: updatedProveedor.tma_nombrep,
+              direccion: updatedProveedor.tma_direcc,
+              telefono: updatedProveedor.tma_telefon,
+              email: updatedProveedor.tma_emailpro,
+            }
+          : p
       )
-      setEditVisible(false)
-      setForm({ rif: '', nombre: '', direccion: '', telefono: '', email: '' })
-      setSelectedProveedor(null)
-    } catch (err) {
-      console.error('Error actualizando proveedor:', err)
-    }
+    );
+
+    setEditVisible(false);
+    setForm({ rif: '', nombre: '', direccion: '', telefono: '', email: '' });
+    setSelectedProveedor(null);
+
+    // ✅ SweetAlert2 de éxito
+    Swal.fire({
+      icon: 'success',
+      title: 'Proveedor actualizado',
+      text: `${updatedProveedor.tma_nombrep} ha sido actualizado correctamente.`,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+
+  } catch (err) {
+    console.error('Error actualizando proveedor:', err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Ocurrió un error inesperado al actualizar el proveedor.',
+    });
   }
+};
 
-  // Eliminar proveedor
-  const handleDeleteProveedor = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este proveedor?')) return
 
-    try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-      const data = await res.json()
+  // Eliminar proveedor con SweetAlert2
+const handleDeleteProveedor = async (proveedor) => {
+  try {
+    // Confirmación de eliminación
+    const result = await Swal.fire({
+      title: `¿Eliminar a ${proveedor.nombre}?`,
+      text: "No podrás revertir esta acción",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
 
-      if (!res.ok) {
-        setErrorMessage(data.error || 'No se pudo eliminar el proveedor.')
-        setErrorModal(true)
-        return
-      }
+    if (!result.isConfirmed) return; // Si canceló, no hace nada
 
-      setProveedores(proveedores.filter((p) => p.id !== id))
-    } catch (err) {
-      console.error('Error eliminando proveedor:', err)
-      setErrorMessage('Error inesperado al eliminar el proveedor.')
-      setErrorModal(true)
+    // Llamada a la API para eliminar
+    const res = await fetch(`${API_URL}/${proveedor.id}`, { method: 'DELETE' });
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Error de la API
+      Swal.fire({
+        icon: 'error',
+        title: 'No se puede eliminar',
+        text: data.error || 'Este proveedor no puede ser eliminado.',
+      });
+      return;
     }
+
+    // Actualiza la lista eliminando el proveedor
+    setProveedores(proveedores.filter((p) => p.id !== proveedor.id));
+
+    // Mensaje de éxito
+    Swal.fire({
+      icon: 'success',
+      title: 'Proveedor eliminado',
+      text: `${proveedor.nombre} ha sido eliminado correctamente.`,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+
+  } catch (err) {
+    console.error('Error eliminando proveedor:', err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error inesperado al eliminar el proveedor.',
+    });
   }
+};
+
 
   // Filtros
   const proveedoresFiltrados = proveedores.filter((item) => {
@@ -330,22 +409,27 @@ const Proveedores = () => {
                   <CTableDataCell>{item.telefono}</CTableDataCell>
                   <CTableDataCell>{item.email}</CTableDataCell>
                   <CTableDataCell>
-                    <CButton
-                      size="sm"
-                      color="warning"
-                      className="me-2"
-                      onClick={() => handleEditProveedor(item)}
-                    >
-                      Editar
-                    </CButton>
-                    <CButton
-                      size="sm"
-                      color="danger"
-                      onClick={() => handleDeleteProveedor(item.id)}
-                    >
-                      Eliminar
-                    </CButton>
-                  </CTableDataCell>
+  <CButton
+    size="sm"
+    color="warning"
+    variant="outline"
+    className="me-2"
+    onClick={() => handleEditProveedor(item)}
+    title="Editar proveedor"
+  >
+    <CIcon icon={cilPencil} />
+  </CButton>
+
+  <CButton
+    size="sm"
+    color="danger"
+    variant="outline"
+    onClick={() => handleDeleteProveedor(item)}
+    title="Eliminar proveedor"
+  >
+    <CIcon icon={cilTrash} />
+  </CButton>
+</CTableDataCell>
                 </CTableRow>
               ))
             )}

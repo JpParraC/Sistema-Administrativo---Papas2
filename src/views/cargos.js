@@ -8,7 +8,8 @@ import {
 } from '@coreui/react'
 
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash } from '@coreui/icons'
+import { cilPencil, cilTrash, cilPlus } from '@coreui/icons'
+import Swal from 'sweetalert2'
 
 // ======================
 // API
@@ -33,11 +34,6 @@ const Cargos = () => {
   const [isEdit, setIsEdit] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
 
-  // modales
-  const [successModal, setSuccessModal] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
-  const [confirmDelete, setConfirmDelete] = useState(false)
-
   const [form, setForm] = useState({
     nombre_cargo: '',
     nivel: '',
@@ -48,9 +44,19 @@ const Cargos = () => {
   // FETCH
   // ======================
   const fetchCargos = async () => {
-    const res = await fetch(API_CARGOS)
-    const data = await res.json()
-    setCargos(Array.isArray(data) ? data : [])
+    try {
+      const res = await fetch(API_CARGOS)
+      if (!res.ok) throw new Error('Error obteniendo cargos')
+      const data = await res.json()
+      setCargos(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron obtener los cargos',
+      })
+    }
   }
 
   useEffect(() => {
@@ -82,20 +88,28 @@ const Cargos = () => {
         body: JSON.stringify(form)
       })
 
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error('Error al guardar el cargo')
 
       await fetchCargos()
       handleClose()
 
-      setSuccessMessage(
-        isEdit
-          ? 'Cargo actualizado correctamente ✅'
-          : 'Cargo creado correctamente ✅'
-      )
-      setSuccessModal(true)
+      Swal.fire({
+        icon: 'success',
+        title: isEdit ? 'Cargo actualizado' : 'Cargo creado',
+        text: isEdit
+          ? 'El cargo se actualizó correctamente ✅'
+          : 'El cargo se creó correctamente ✅',
+        timer: 1800,
+        showConfirmButton: false,
+      })
 
-    } catch {
-      alert('Error al guardar')
+    } catch (err) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo guardar el cargo',
+      })
     } finally {
       setLoading(false)
     }
@@ -118,18 +132,40 @@ const Cargos = () => {
   // ======================
   // DELETE
   // ======================
-  const handleDeleteConfirm = (id) => {
-    setSelectedId(id)
-    setConfirmDelete(true)
-  }
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar cargo?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    })
 
-  const handleDelete = async () => {
-    await fetch(`${API_CARGOS}/${selectedId}`, { method: 'DELETE' })
-    fetchCargos()
-    setConfirmDelete(false)
+    if (!result.isConfirmed) return
 
-    setSuccessMessage('Cargo eliminado correctamente 🗑️')
-    setSuccessModal(true)
+    try {
+      const res = await fetch(`${API_CARGOS}/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al eliminar el cargo')
+
+      fetchCargos()
+      Swal.fire({
+        icon: 'success',
+        title: 'Eliminado',
+        text: 'El cargo fue eliminado correctamente 🗑️',
+        timer: 1800,
+        showConfirmButton: false,
+      })
+    } catch (err) {
+      console.error(err)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo eliminar el cargo',
+      })
+    }
   }
 
   const handleClose = () => {
@@ -145,10 +181,10 @@ const Cargos = () => {
 
   return (
     <CCard>
-      <CCardHeader className="d-flex justify-content-between">
+      <CCardHeader className="d-flex justify-content-between align-items-center">
         <h5>Cargos</h5>
         <CButton color="primary" onClick={() => setVisible(true)}>
-          + Nuevo Cargo
+          <CIcon icon={cilPlus} /> Nuevo Cargo
         </CButton>
       </CCardHeader>
 
@@ -177,7 +213,7 @@ const Cargos = () => {
                     <CIcon icon={cilPencil} />
                   </CButton>
                   <CButton size="sm" color="danger" variant="outline"
-                    onClick={() => handleDeleteConfirm(c.id)}>
+                    onClick={() => handleDelete(c.id)}>
                     <CIcon icon={cilTrash} />
                   </CButton>
                 </CTableDataCell>
@@ -192,12 +228,31 @@ const Cargos = () => {
         <CModalHeader>{isEdit ? 'Editar Cargo' : 'Nuevo Cargo'}</CModalHeader>
         <CForm onSubmit={handleSubmit}>
           <CModalBody>
-            <CFormInput label="Nombre" name="nombre_cargo" value={form.nombre_cargo} onChange={handleInputChange} required />
-            <CFormSelect label="Nivel" name="nivel" value={form.nivel} onChange={handleInputChange} required>
+            <CFormInput
+              label="Nombre"
+              name="nombre_cargo"
+              value={form.nombre_cargo}
+              onChange={handleInputChange}
+              required
+            />
+            <CFormSelect
+              label="Nivel"
+              name="nivel"
+              value={form.nivel}
+              onChange={handleInputChange}
+              required
+            >
               <option value="">Seleccione</option>
               {nivelesCargo.map(n => <option key={n}>{n}</option>)}
             </CFormSelect>
-            <CFormInput type="number" label="Salario" name="salario_base" value={form.salario_base} onChange={handleInputChange} required />
+            <CFormInput
+              type="number"
+              label="Salario"
+              name="salario_base"
+              value={form.salario_base}
+              onChange={handleInputChange}
+              required
+            />
           </CModalBody>
           <CModalFooter>
             <CButton color="secondary" onClick={handleClose}>Cancelar</CButton>
@@ -206,35 +261,6 @@ const Cargos = () => {
             </CButton>
           </CModalFooter>
         </CForm>
-      </CModal>
-
-      {/* MODAL SUCCESS */}
-      <CModal visible={successModal} onClose={() => setSuccessModal(false)}>
-        <CModalHeader>Éxito</CModalHeader>
-        <CModalBody className="text-center">
-          {successMessage}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="success" onClick={() => setSuccessModal(false)}>
-            OK
-          </CButton>
-        </CModalFooter>
-      </CModal>
-
-      {/* MODAL CONFIRM DELETE */}
-      <CModal visible={confirmDelete} onClose={() => setConfirmDelete(false)}>
-        <CModalHeader>Confirmar eliminación</CModalHeader>
-        <CModalBody>
-          ¿Está seguro de eliminar este cargo?
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={() => setConfirmDelete(false)}>
-            Cancelar
-          </CButton>
-          <CButton color="danger" onClick={handleDelete}>
-            Eliminar
-          </CButton>
-        </CModalFooter>
       </CModal>
     </CCard>
   )

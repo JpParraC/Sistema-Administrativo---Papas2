@@ -9,6 +9,7 @@ import {
 
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash } from '@coreui/icons'
+import Swal from 'sweetalert2'
 
 const API_PERSONAL = 'http://localhost:4000/api/personal'
 const API_CARGOS = 'http://localhost:4000/api/cargos'
@@ -23,10 +24,6 @@ const Personal = () => {
   const [isEdit, setIsEdit] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
 
-  // 🔴 NUEVO (eliminar)
-  const [deleteVisible, setDeleteVisible] = useState(false)
-  const [personalToDelete, setPersonalToDelete] = useState(null)
-
   const [form, setForm] = useState({
     tma_nombrep: '',
     tma_cargope: '',
@@ -37,9 +34,7 @@ const Personal = () => {
     tma_estadpe: 'Activo'
   })
 
-  // ======================
-  // FETCH PERSONAL
-  // ======================
+  // ====================== FETCH ======================
   const fetchPersonal = async () => {
     try {
       const res = await fetch(API_PERSONAL)
@@ -51,14 +46,10 @@ const Personal = () => {
     }
   }
 
-  // ======================
-  // FETCH CARGOS
-  // ======================
   const fetchCargos = async () => {
     try {
       const res = await fetch(API_CARGOS)
       const data = await res.json()
-
       if (Array.isArray(data)) setCargos(data)
       else if (Array.isArray(data.data)) setCargos(data.data)
       else if (Array.isArray(data.cargos)) setCargos(data.cargos)
@@ -74,9 +65,7 @@ const Personal = () => {
     fetchCargos()
   }, [])
 
-  // ======================
-  // INPUT
-  // ======================
+  // ====================== FORM INPUT ======================
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
@@ -84,31 +73,21 @@ const Personal = () => {
 
   const handleCargoChange = (e) => {
     const cargoSeleccionado = e.target.value
-
-    const cargoEncontrado = cargos.find(
-      (c) => c.nombre_cargo === cargoSeleccionado
-    )
-
-    setForm((prev) => ({
+    const cargoEncontrado = cargos.find(c => c.nombre_cargo === cargoSeleccionado)
+    setForm(prev => ({
       ...prev,
       tma_cargope: cargoSeleccionado,
       tma_salario: cargoEncontrado ? Number(cargoEncontrado.salario_base) : 0
-
     }))
   }
 
-
-  // ======================
-  // CREATE / UPDATE
-  // ======================
+  // ====================== CREATE / UPDATE ======================
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-
     try {
       const url = isEdit ? `${API_PERSONAL}/${selectedId}` : API_PERSONAL
       const method = isEdit ? 'PUT' : 'POST'
-      console.log('ENVIANDO:', form)
 
       const res = await fetch(url, {
         method,
@@ -116,23 +95,36 @@ const Personal = () => {
         body: JSON.stringify(form)
       })
 
-      if (!res.ok) throw new Error('Error')
+      if (!res.ok) throw new Error('Error al guardar')
 
       await fetchPersonal()
       handleClose()
-    } catch {
-      alert('Error al guardar')
+
+      Swal.fire({
+        icon: 'success',
+        title: isEdit ? 'Empleado actualizado' : 'Empleado creado',
+        text: isEdit
+          ? 'El empleado ha sido actualizado correctamente.'
+          : 'Nuevo empleado creado exitosamente.',
+        timer: 1800,
+        showConfirmButton: false
+      })
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Ocurrió un error al guardar el empleado. 😓'
+      })
+      console.error(error)
     } finally {
       setLoading(false)
     }
   }
 
-  // ======================
-  // EDIT
+  // ====================== EDIT ======================
   const handleEdit = (p) => {
     setIsEdit(true)
-    setSelectedId(p.tma_idperso) // ✅ ID REAL
-
+    setSelectedId(p.tma_idperso)
     setForm({
       tma_nombrep: p.tma_nombrep,
       tma_cargope: p.tma_cargope,
@@ -142,26 +134,44 @@ const Personal = () => {
       tma_emailpe: p.tma_emailpe,
       tma_estadpe: p.tma_estadpe
     })
-
     setVisible(true)
   }
 
+  // ====================== DELETE ======================
+  const handleDelete = async (p) => {
+    const result = await Swal.fire({
+      title: `¿Eliminar a ${p.tma_nombrep}?`,
+      text: "No podrás revertir esta acción",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    })
 
+    if (!result.isConfirmed) return
 
-  // ======================
-  // DELETE (MODAL)
-  // ======================
-  const handleShowDelete = (p) => {
-    setPersonalToDelete(p)
-    setDeleteVisible(true)
-  }
+    try {
+      const res = await fetch(`${API_PERSONAL}/${p.tma_idperso}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error al eliminar')
+      await fetchPersonal()
 
-  const confirmDelete = async () => {
-    if (!personalToDelete) return
-    await fetch(`${API_PERSONAL}/${personalToDelete.tma_idperso}`, { method: 'DELETE' })
-    await fetchPersonal()
-    setDeleteVisible(false)
-    setPersonalToDelete(null)
+      Swal.fire({
+        icon: 'success',
+        title: 'Empleado eliminado',
+        text: `${p.tma_nombrep} ha sido eliminado correctamente.`,
+        timer: 1800,
+        showConfirmButton: false
+      })
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo eliminar el empleado. 😓'
+      })
+      console.error(error)
+    }
   }
 
   const handleClose = () => {
@@ -234,7 +244,7 @@ const Personal = () => {
                       size="sm"
                       color="danger"
                       variant="outline"
-                      onClick={() => handleShowDelete(p)}
+                      onClick={() => handleDelete(p)}
                     >
                       <CIcon icon={cilTrash} />
                     </CButton>
@@ -245,25 +255,6 @@ const Personal = () => {
           </CTable>
         </CCardBody>
       </CCard>
-
-      {/* MODAL CONFIRMAR ELIMINACIÓN */}
-      <CModal visible={deleteVisible} onClose={() => setDeleteVisible(false)} size="sm">
-        <CModalHeader>
-          <strong>Confirmar Eliminación</strong>
-        </CModalHeader>
-        <CModalBody className="text-center">
-          ¿Seguro que deseas eliminar a{' '}
-          <strong>{personalToDelete?.tma_nombrep}</strong>?
-        </CModalBody>
-        <CModalFooter className="justify-content-center">
-          <CButton color="danger" onClick={confirmDelete}>
-            Sí, eliminar
-          </CButton>
-          <CButton color="secondary" onClick={() => setDeleteVisible(false)}>
-            Cancelar
-          </CButton>
-        </CModalFooter>
-      </CModal>
 
       {/* MODAL FORM */}
       <CModal visible={visible} onClose={handleClose}>
@@ -282,7 +273,6 @@ const Personal = () => {
               onChange={handleCargoChange}
               required
             >
-
               <option value="">Selecciona un cargo</option>
               {Array.isArray(cargos) && cargos.map((c, i) => (
                 <option key={`cargo-${c.id ?? i}`} value={c.nombre_cargo}>
@@ -292,21 +282,13 @@ const Personal = () => {
             </CFormSelect>
 
             <CFormInput type="date" label="Fecha" name="tma_fechcon" value={form.tma_fechcon} onChange={handleInputChange} required />
-            <CFormInput
-              type="number"
-              label="Salario"
-              name="tma_salario"
-              value={form.tma_salario}
-              readOnly
-            />
+            <CFormInput type="number" label="Salario" name="tma_salario" value={form.tma_salario} readOnly />
 
             <CFormInput label="Teléfono" name="tma_telefon" value={form.tma_telefon} onChange={handleInputChange} required />
             <CFormInput type="email" label="Email" name="tma_emailpe" value={form.tma_emailpe} onChange={handleInputChange} required />
 
             <CFormSelect label="Estado" name="tma_estadpe" value={form.tma_estadpe} onChange={handleInputChange}>
-              {estadosPersonal.map(e => (
-                <option key={`estado-${e}`} value={e}>{e}</option>
-              ))}
+              {estadosPersonal.map(e => <option key={`estado-${e}`} value={e}>{e}</option>)}
             </CFormSelect>
           </CModalBody>
 
