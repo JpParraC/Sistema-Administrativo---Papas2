@@ -38,7 +38,7 @@ const AppHeader = () => {
         </CHeaderToggler>
         <span
           className="d-none d-md-inline-block"
-          style={{ color: '#FC4A1A', fontWeight: 500, fontStyle: 'italic', fontSize: 16, letterSpacing: 1 }}
+          style={{ color: '#244b7eff', fontWeight: 500, fontStyle: 'italic', fontSize: 16, letterSpacing: 1 }}
         >
           ...DONDE LA AGRICULTURA SE VUELVE INTELIGENTE.
         </span>

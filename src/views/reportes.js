@@ -167,10 +167,18 @@ const Reportes = () => {
   }
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #E6EBE0 60%, #F4F1BB 100%)', border: 'none', boxShadow: '0 2px 16px 0 #ED6A5A33' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#36C9C6', color: '#fff' }}>
+    <CCard
+      style={{
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
+      }}
+    >
+      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#4b617dff', color: '#fff' }}>
         <h5 className="mb-0" style={{ letterSpacing: 1 }}>Reportes</h5>
-        <CButton color="light" style={{ color: '#36C9C6', fontWeight: 'bold' }} onClick={() => setVisible(true)}>+ Nuevo Reporte</CButton>
+        <CButton color="light" style={{ color: '#4b617dff', fontWeight: 'bold' }} onClick={() => setVisible(true)}>+ Nuevo Reporte</CButton>
       </CCardHeader>
 
       <CCardBody>
@@ -220,15 +228,17 @@ const Reportes = () => {
                 <CTableDataCell>{item.contenido_reporte?.length > 60 ? item.contenido_reporte.slice(0, 60) + '...' : item.contenido_reporte}</CTableDataCell>
                 <CTableDataCell><CBadge color="secondary">{item.nombre_personal || 'Desconocido'}</CBadge></CTableDataCell>
                 <CTableDataCell className="d-flex gap-2">
-                  <CButton color="info" size="sm" onClick={() => handleVerMas(item)}>
-                    <CIcon icon={cilInfo} />
-                  </CButton>
-                  <CButton color="warning" size="sm" onClick={() => handleEditar(item)}>
-                    <CIcon icon={cilPencil} />
-                  </CButton>
-                  <CButton color="danger" size="sm" onClick={() => handleEliminar(item)}>
-                    <CIcon icon={cilTrash} />
-                  </CButton>
+                <CButton color="info" variant="outline" size="sm" onClick={() => handleVerMas(item)}>
+  <CIcon icon={cilInfo} />
+</CButton>
+
+<CButton color="warning" variant="outline" size="sm" onClick={() => handleEditar(item)}>
+  <CIcon icon={cilPencil} />
+</CButton>
+
+<CButton color="danger" variant="outline" size="sm" onClick={() => handleEliminar(item)}>
+  <CIcon icon={cilTrash} />
+</CButton>
                 </CTableDataCell>
               </CTableRow>
             ))}
@@ -238,7 +248,7 @@ const Reportes = () => {
 
       {/* ================= MODAL CREAR/EDITAR ================= */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>{form.id ? 'Editar Reporte' : 'Nuevo Reporte'}</strong>
         </CModalHeader>
         <CForm onSubmit={handleSubmitReporte}>
@@ -260,7 +270,7 @@ const Reportes = () => {
 
       {/* ================= MODAL VER MÁS ================= */}
       <CModal visible={!!reporteSeleccionado} onClose={handleCerrarVerMas}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>Detalle del Reporte</strong>
         </CModalHeader>
         <CModalBody>

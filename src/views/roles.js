@@ -139,7 +139,15 @@ const Roles = () => {
   return (
     <div className="d-flex justify-content-center mt-4">
       <div style={{ width: '750px' }}>
-        <CCard>
+         <CCard
+          style={{
+            backdropFilter: 'blur(16px)',
+            background: 'rgba(255,255,255,0.85)',
+            borderRadius: 24,
+            boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+            border: '1px solid rgba(255, 255, 255, 1)',
+          }}
+        >
           <CCardHeader className="d-flex justify-content-between align-items-center">
             <h5>Roles</h5>
             <CButton color="primary" size="sm" onClick={() => handleOpenModal()}>
@@ -174,23 +182,24 @@ const Roles = () => {
                       <div className="d-flex justify-content-center gap-1">
                         {/* Botón Editar con icono */}
                         <CButton
-                          size="sm"
-                          color="info"
-                          onClick={() => handleOpenModal(rol)}
-                          title="Editar rol"
-                        >
-                          <CIcon icon={cilPencil} />
-                        </CButton>
+  size="sm"
+  color="info"
+  variant="outline"
+  onClick={() => handleOpenModal(rol)}
+  title="Editar rol"
+>
+  <CIcon icon={cilPencil} />
+</CButton>
 
-                        {/* Botón Eliminar con icono */}
-                        <CButton
-                          size="sm"
-                          color="danger"
-                          onClick={() => handleDeleteRole(rol.id)}
-                          title="Eliminar rol"
-                        >
-                          <CIcon icon={cilTrash} />
-                        </CButton>
+<CButton
+  size="sm"
+  color="danger"
+  variant="outline"
+  onClick={() => handleDeleteRole(rol.id)}
+  title="Eliminar rol"
+>
+  <CIcon icon={cilTrash} />
+</CButton>
                       </div>
                     </CTableDataCell>
                   </CTableRow>

@@ -308,21 +308,23 @@ const handleDeleteProveedor = async (proveedor) => {
   return (
     <CCard
       style={{
-        background: 'linear-gradient(135deg, #E6EBE0 60%, #9BC1BC 100%)',
-        border: 'none',
-        boxShadow: '0 2px 16px 0 #9BC1BC33',
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
       }}
     >
       <CCardHeader
         className="d-flex justify-content-between align-items-center"
-        style={{ background: '#ED6A5A', color: '#fff' }}
+        style={{ background: '#4b617dff', color: '#fff' }}
       >
         <h5 className="mb-0" style={{ letterSpacing: 1 }}>
           Proveedores
         </h5>
         <CButton
           color="light"
-          style={{ color: '#ED6A5A', fontWeight: 'bold' }}
+          style={{ color: '#4b617dff', fontWeight: 'bold' }}
           onClick={() => setVisible(true)}
         >
           + Nuevo Proveedor
@@ -400,7 +402,7 @@ const handleDeleteProveedor = async (proveedor) => {
                   <CTableDataCell>
                     <CBadge
                       color="info"
-                      style={{ fontSize: 13, background: '#36C9C6', color: '#fff' }}
+                      style={{ fontSize: 13, background: '#4b617dff', color: '#fff' }}
                     >
                       {item.nombre}
                     </CBadge>
@@ -439,7 +441,7 @@ const handleDeleteProveedor = async (proveedor) => {
 
       {/* Modal para nuevo proveedor */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader style={{ background: '#ED6A5A', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>Nuevo Proveedor</strong>
         </CModalHeader>
         <CForm onSubmit={handleAddProveedor}>
@@ -513,7 +515,7 @@ const handleDeleteProveedor = async (proveedor) => {
 
       {/* Modal de error al eliminar */}
       <CModal visible={errorModal} onClose={() => setErrorModal(false)}>
-        <CModalHeader style={{ background: '#D32F2F', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>No se puede eliminar</strong>
         </CModalHeader>
 
@@ -531,7 +533,7 @@ const handleDeleteProveedor = async (proveedor) => {
 
       {/* Modal para editar proveedor */}
       <CModal visible={editVisible} onClose={() => setEditVisible(false)}>
-        <CModalHeader style={{ background: '#FFB74D', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>Editar Proveedor</strong>
         </CModalHeader>
         <CForm onSubmit={handleUpdateProveedor}>

@@ -29,8 +29,16 @@ const Inventario = () => {
   const cellStyle = { textAlign: 'center', verticalAlign: 'middle' }
 
   return (
-    <CCard style={{ borderRadius: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
-      <CCardHeader style={{ background: '#fc8f46ff', color: '#fff', textAlign: 'center', fontWeight: 600 }}>
+    <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
+      <CCardHeader style={{ background: '#4b617dff', color: '#fff', textAlign: 'center', fontWeight: 600 }}>
         <h5 className="mb-0" style={{ letterSpacing: 1 }}>Inventario</h5>
       </CCardHeader>
       <CCardBody>

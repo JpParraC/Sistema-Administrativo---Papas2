@@ -27,7 +27,7 @@ const AppSidebar = () => {
   return (
     <CSidebar
       style={{
-        boxShadow: '4px 0 8px -2px rgb(255, 136, 103)'
+        boxShadow: '4px 0 8px -2px rgba(73, 93, 194, 1)'
       }}
       className="border-end"
       colorScheme="black"
