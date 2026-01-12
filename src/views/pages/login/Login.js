@@ -1,4 +1,4 @@
-// src/views/Login.js
+// src/views/pages/login/Login.js
 import React, { useState, useEffect } from 'react'
 import {
   CButton,
@@ -18,17 +18,9 @@ import Swal from 'sweetalert2'
 import fondoLogin from 'src/assets/images/fondologin.jpg'
 
 const Login = () => {
-  const [showRegister, setShowRegister] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [loginUsername, setLoginUsername] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
-  const [registerUsername, setRegisterUsername] = useState('')
-  const [registerEmail, setRegisterEmail] = useState('')
-  const [registerPassword, setRegisterPassword] = useState('')
   const [loginError, setLoginError] = useState('')
-  const [registerError, setRegisterError] = useState('')
-  const [emailMessage, setEmailMessage] = useState('')
 
   const API_BASE = 'http://localhost:4000/api'
 
@@ -48,6 +40,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
+
     if (!loginUsername || !loginPassword) {
       setLoginError('Por favor, completa todos los campos.')
       return
@@ -58,7 +51,7 @@ const Login = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usuario: loginUsername, // asegúrate que tu backend espera 'usuario' o 'email'
+          usuario: loginUsername,
           password: loginPassword,
         }),
       })
@@ -66,65 +59,28 @@ const Login = () => {
       const data = await res.json()
 
       if (!res.ok) {
-        setLoginError(data.error || 'Usuario o contraseña incorrectos')
+        // Mensajes personalizados del backend
+        if (data.message) {
+          alertError(data.message)
+        } else {
+          setLoginError(data.error || 'Usuario o contraseña incorrectos')
+        }
         return
       }
 
+      // Guardar token y usuario en localStorage
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
+      // Mostrar SweetAlert y redirigir
       alertSuccess('Bienvenido', `Hola ${data.user.nombre}`)
-      window.location.href = '/#/dashboard'
+      setTimeout(() => {
+        window.location.href = '/#/dashboard'
+      }, 1000)
     } catch (err) {
       console.error(err)
       setLoginError('No se pudo conectar al servidor')
     }
-  }
-
-  // ===== REGISTRO =====
-  const handleRegister = async () => {
-    setRegisterError('')
-    if (!registerUsername || !registerEmail || !registerPassword) {
-      setRegisterError('Por favor, completa todos los campos.')
-      return
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/usuarios`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario: registerUsername,
-          email: registerEmail,
-          password: registerPassword,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setRegisterError(data.error || 'No se pudo registrar el usuario')
-        return
-      }
-
-      alertSuccess('Registro exitoso', 'Usuario creado correctamente')
-      setShowRegister(false)
-      setLoginUsername(registerEmail)
-      setLoginPassword(registerPassword)
-    } catch (err) {
-      console.error(err)
-      setRegisterError('No se pudo conectar al servidor')
-    }
-  }
-
-  // ===== RECUPERAR CONTRASEÑA (simulada) =====
-  const handleForgotPassword = async () => {
-    setEmailMessage('')
-    if (!forgotPasswordEmail) {
-      setEmailMessage('Por favor, ingresa tu correo electrónico.')
-      return
-    }
-    setEmailMessage('Si el correo existe, recibirás instrucciones para restablecer tu contraseña.')
   }
 
   return (
@@ -167,112 +123,38 @@ const Login = () => {
             </div>
           </div>
 
-          {showForgotPassword ? (
-            <CForm>
-              <h4 className="text-center mb-3" style={{ color: '#36C9C6' }}>Recuperar contraseña</h4>
-              <CInputGroup className="mb-3">
-                <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                <CFormInput
-                  type="email"
-                  placeholder="Correo electrónico"
-                  value={forgotPasswordEmail}
-                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                />
-              </CInputGroup>
-              {emailMessage && <p className="text-info">{emailMessage}</p>}
-              <CRow>
-                <CCol xs={12} className="mb-2">
-                  <CButton color="info" className="w-100" onClick={handleForgotPassword}>
-                    Enviar
-                  </CButton>
-                </CCol>
-                <CCol xs={12}>
-                  <CButton color="danger" className="w-100" onClick={() => setShowForgotPassword(false)}>
-                    Volver
-                  </CButton>
-                </CCol>
-              </CRow>
-            </CForm>
-          ) : showRegister ? (
-            <CForm>
-              <h4 className="text-center mb-3" style={{ color: '#36C9C6' }}>Registro</h4>
-              <CInputGroup className="mb-3">
-                <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                <CFormInput
-                  placeholder="Usuario"
-                  value={registerUsername}
-                  onChange={(e) => setRegisterUsername(e.target.value)}
-                />
-              </CInputGroup>
-              <CInputGroup className="mb-3">
-                <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                <CFormInput
-                  placeholder="Correo electrónico"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
-                />
-              </CInputGroup>
-              <CInputGroup className="mb-4">
-                <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
-                <CFormInput
-                  type="password"
-                  placeholder="Contraseña"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                />
-              </CInputGroup>
-              {registerError && <p className="text-danger">{registerError}</p>}
-              <CRow>
-                <CCol xs={12} className="mb-2">
-                  <CButton color="success" className="w-100" onClick={handleRegister}>
-                    Registrarse
-                  </CButton>
-                </CCol>
-                <CCol xs={12}>
-                  <CButton color="danger" className="w-100" onClick={() => setShowRegister(false)}>
-                    Volver
-                  </CButton>
-                </CCol>
-              </CRow>
-            </CForm>
-          ) : (
-            <CForm onSubmit={handleLogin}>
-              <h4 className="text-center mb-3" style={{ color: '#36C9C6' }}>Iniciar sesión</h4>
-              <CInputGroup className="mb-3">
-                <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                <CFormInput
-                  placeholder="Usuario"
-                  value={loginUsername}
-                  onChange={(e) => setLoginUsername(e.target.value)}
-                />
-              </CInputGroup>
-              <CInputGroup className="mb-4">
-                <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
-                <CFormInput
-                  type="password"
-                  placeholder="Contraseña"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                />
-              </CInputGroup>
-              {loginError && <p className="text-danger">{loginError}</p>}
-              <CRow>
-                <CCol xs={12} className="mb-2">
-                  <CButton color="primary" className="w-100" type="submit">Ingresar</CButton>
-                </CCol>
-                <CCol xs={12}>
-                  <CButton color="link" className="w-100" onClick={() => setShowForgotPassword(true)}>
-                    ¿Olvidaste tu contraseña?
-                  </CButton>
-                </CCol>
-                <CCol xs={12}>
-                  <CButton color="link" className="w-100" onClick={() => setShowRegister(true)}>
-                    Registrarse
-                  </CButton>
-                </CCol>
-              </CRow>
-            </CForm>
-          )}
+          <CForm onSubmit={handleLogin}>
+            <h4 className="text-center mb-3" style={{ color: '#36C9C6' }}>Iniciar sesión</h4>
+
+            <CInputGroup className="mb-3">
+              <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+              <CFormInput
+                placeholder="Usuario"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+              />
+            </CInputGroup>
+
+            <CInputGroup className="mb-4">
+              <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
+              <CFormInput
+                type="password"
+                placeholder="Contraseña"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+              />
+            </CInputGroup>
+
+            {loginError && <p className="text-danger">{loginError}</p>}
+
+            <CRow>
+              <CCol xs={12} className="mb-2">
+                <CButton color="primary" className="w-100" type="submit">
+                  Ingresar
+                </CButton>
+              </CCol>
+            </CRow>
+          </CForm>
         </CCardBody>
       </CCard>
     </div>
