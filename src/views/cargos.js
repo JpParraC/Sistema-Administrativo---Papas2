@@ -180,7 +180,15 @@ const Cargos = () => {
   }
 
   return (
-    <CCard>
+    <CCard
+      style={{
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
+      }}
+    >
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <h5>Cargos</h5>
         <CButton color="primary" onClick={() => setVisible(true)}>

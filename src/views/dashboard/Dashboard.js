@@ -167,7 +167,15 @@ const Dashboard = () => {
 
       <CRow>
         <CCol md={6} className="mb-4">
-          <CCard>
+          <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
             <CCardHeader className="fw-bold">Ventas Recientes</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -200,7 +208,15 @@ const Dashboard = () => {
           </CCard>
         </CCol>
         <CCol md={6} className="mb-4">
-          <CCard>
+          <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
             <CCardHeader className="fw-bold">Compras Recientes</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -236,7 +252,15 @@ const Dashboard = () => {
 
       <CRow>
         <CCol md={6} className="mb-4">
-          <CCard>
+         <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
             <CCardHeader className="fw-bold">Inventario Bajo</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -263,7 +287,15 @@ const Dashboard = () => {
           </CCard>
         </CCol>
         <CCol md={6} className="mb-4">
-          <CCard>
+          <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
             <CCardHeader className="fw-bold">Producción Activa</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -293,7 +325,15 @@ const Dashboard = () => {
 
       <CRow>
         <CCol md={12} className="mb-4">
-          <CCard>
+          <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,1)',
+  }}
+>
             <CCardHeader className="fw-bold">Balance Mensual</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">

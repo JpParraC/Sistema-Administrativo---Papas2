@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash } from '@coreui/icons'
 import {
   CCard, CCardHeader, CCardBody, CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CModal, CModalHeader, CModalBody, CModalFooter, CForm,
@@ -119,7 +121,15 @@ const Productos = () => {
 
   // ===================== RENDER =====================
   return (
-    <CCard>
+    <CCard
+      style={{
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
+      }}
+    >
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <h5>Productos</h5>
         <CButton color="primary" onClick={() => handleOpenModal()}>+ Nuevo Producto</CButton>
@@ -162,8 +172,30 @@ const Productos = () => {
                 <CTableDataCell>${Number(prod.precio).toFixed(2)}</CTableDataCell>
                 <CTableDataCell>{prod.tipo}</CTableDataCell>
                 <CTableDataCell>
-                  <CButton size="sm" color="info" className="me-2" onClick={() => handleOpenModal(prod)}>Editar</CButton>
-                  <CButton size="sm" color="danger" onClick={() => handleDeleteProducto(prod.id)}>Eliminar</CButton>
+                <CButton
+  size="sm"
+  color="info"
+  className="border border-info text-info me-2"
+  style={{ backgroundColor: 'transparent' }}
+  onClick={() => handleOpenModal(prod)}
+  title="Editar"
+>
+  <CIcon icon={cilPencil} />
+</CButton>
+
+<CButton
+  size="sm"
+  color="danger"
+  className="border border-danger text-danger"
+  style={{ backgroundColor: 'transparent' }}
+  onClick={() => handleDeleteProducto(prod.id)}
+  title="Eliminar"
+>
+  <CIcon icon={cilTrash} />
+</CButton>
+
+
+
                 </CTableDataCell>
               </CTableRow>
             ))}

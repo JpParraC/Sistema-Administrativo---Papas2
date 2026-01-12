@@ -183,7 +183,15 @@ const Usuarios = () => {
   return (
     <div className="d-flex justify-content-center mt-4">
       <div style={{ width: '750px' }}>
-        <CCard>
+        <CCard
+  style={{
+    backdropFilter: 'blur(16px)',
+    background: 'rgba(255,255,255,0.85)',
+    borderRadius: 24,
+    boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+    border: '1px solid rgba(255, 255, 255, 1)',
+  }}
+>
           <CCardHeader className="d-flex justify-content-between align-items-center">
             <h5>Usuarios</h5>
             <CButton color="primary" size="sm" onClick={() => handleOpenModal()}><CIcon icon={cilPlus} /></CButton>
@@ -220,9 +228,36 @@ const Usuarios = () => {
                     <CTableDataCell>{u.estado}</CTableDataCell>
                     <CTableDataCell>
                       <div className="d-flex justify-content-center gap-1">
-                        <CButton size="sm" color="info" onClick={() => handleOpenModal(u)} title="Editar"><CIcon icon={cilPencil} /></CButton>
-                        <CButton size="sm" color="danger" onClick={() => handleDeleteUsuario(u.id)} title="Eliminar"><CIcon icon={cilTrash} /></CButton>
-                        <CButton size="sm" color="secondary" onClick={() => handleOpenModal(u)} title="Más detalles"><CIcon icon={cilOptions} /></CButton>
+                       <CButton
+  size="sm"
+  color="info"
+  variant="outline"
+  onClick={() => handleOpenModal(u)}
+  title="Editar"
+>
+  <CIcon icon={cilPencil} />
+</CButton>
+
+<CButton
+  size="sm"
+  color="danger"
+  variant="outline"
+  onClick={() => handleDeleteUsuario(u.id)}
+  title="Eliminar"
+>
+  <CIcon icon={cilTrash} />
+</CButton>
+
+<CButton
+  size="sm"
+  color="secondary"
+  variant="outline"
+  onClick={() => handleOpenModal(u)}
+  title="Más detalles"
+>
+  <CIcon icon={cilOptions} />
+</CButton>
+
                       </div>
                     </CTableDataCell>
                   </CTableRow>

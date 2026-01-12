@@ -171,7 +171,15 @@ const Clientes = () => {
   )
 
   return (
-    <CCard>
+     <CCard
+      style={{
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
+      }}
+    >
       <CCardHeader className="d-flex justify-content-between">
         <h5>Clientes</h5>
         <CButton color="primary" onClick={() => { setForm({ cedula:'',nombre_cliente:'',direccion:'',telefono:'',email:'' }); setErrors({}); setVisible(true) }}>
@@ -202,12 +210,25 @@ const Clientes = () => {
                 <CTableDataCell>{c.telefono}</CTableDataCell>
                 <CTableDataCell>{c.email}</CTableDataCell>
                 <CTableDataCell>
-                  <CButton size="sm" color="warning" className="me-2" onClick={() => handleEditCliente(c)}>
-                    <CIcon icon={cilPencil} />
-                  </CButton>
-                  <CButton size="sm" color="danger" onClick={() => handleDeleteCliente(c)}>
-                    <CIcon icon={cilTrash} />
-                  </CButton>
+                  <CButton
+  size="sm"
+  color="warning"
+  variant="outline"
+  className="me-2"
+  onClick={() => handleEditCliente(c)}
+>
+  <CIcon icon={cilPencil} />
+</CButton>
+
+<CButton
+  size="sm"
+  color="danger"
+  variant="outline"
+  onClick={() => handleDeleteCliente(c)}
+>
+  <CIcon icon={cilTrash} />
+</CButton>
+
                 </CTableDataCell>
               </CTableRow>
             ))}

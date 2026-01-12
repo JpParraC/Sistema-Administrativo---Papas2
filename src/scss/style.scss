@@ -55,9 +55,9 @@ body {
 // Sidebar estilos personalizados
 .sidebar,
 .sidebar[data-coreui-theme="light"] {
-  background-color: #ED6A5A !important;
+  background-color: rgb(46, 65, 122) !important; // azul oscuro elegante
   color: var(--color-white) !important;
-  border-right: 2px solid var(--color-opal); // Separador visual
+  border-right: 2px solid rgba(3, 30, 149, 0.6); // separador sutil
 }
 
 .sidebar .nav-link,
@@ -68,9 +68,11 @@ body {
 .sidebar .nav-link.active,
 .sidebar .nav-link:focus,
 .sidebar .nav-link:hover {
-  background-color: var(--color-white) !important;
-  color: #FC4A1A !important;
-  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.1) !important; // sutil, transparente sobre azul oscuro
+  color: #ebffff !important; // azul brillante para resaltar el link
+  font-weight: 600; // un poco más ligero que bold, moderno
+  border-radius: 8px; // bordes redondeados para el efecto moderno
+  transition: all 0.3s ease; // animación suave al hover
 }
 
 // Header
@@ -115,4 +117,14 @@ body {
 
 .footer {
   min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
+}
+.sidebar .nav-link .nav-icon {
+  color: rgba(255, 255, 255, 0.85); // color principal de los iconos en azul oscuro
+  transition: all 0.3s ease; // suaviza cambios al hover
+}
+
+.sidebar .nav-link.active .nav-icon,
+.sidebar .nav-link:focus .nav-icon,
+.sidebar .nav-link:hover .nav-icon {
+  color: #36C9C6; // azul brillante al estar activo o hover
 }

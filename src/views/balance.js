@@ -105,10 +105,18 @@ const Balance = () => {
   const balanceFinal = totalIngresos - totalEgresos
 
   return (
-    <CCard style={{ background: 'linear-gradient(135deg, #E6EBE0 60%, #F4F1BB 100%)', border: 'none', boxShadow: '0 2px 16px 0 #ED6A5A33' }}>
-      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#36C9C6', color: '#fff' }}>
+    <CCard
+      style={{
+        backdropFilter: 'blur(16px)',
+        background: 'rgba(255,255,255,0.85)',
+        borderRadius: 24,
+        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+        border: '1px solid rgba(255, 255, 255, 1)',
+      }}
+    >
+      <CCardHeader className="d-flex justify-content-between align-items-center" style={{ background: '#4b617dff', color: '#fff' }}>
         <h5 className="mb-0" style={{ letterSpacing: 1 }}>Balance de Ingresos y Egresos</h5>
-        <CButton color="light" style={{ color: '#36C9C6', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
+        <CButton color="light" style={{ color: '#4b617dff', fontWeight: 'bold' }} onClick={() => setVisible(true)}>
           + Nuevo Movimiento
         </CButton>
       </CCardHeader>
@@ -239,7 +247,7 @@ const Balance = () => {
 
       {/* Modal para nuevo movimiento */}
       <CModal visible={visible} onClose={() => setVisible(false)}>
-        <CModalHeader style={{ background: '#36C9C6', color: '#fff' }}>
+        <CModalHeader style={{ background: '#4b617dff', color: '#fff' }}>
           <strong>Nuevo Movimiento</strong>
         </CModalHeader>
         <CForm onSubmit={handleAddBalance}>
