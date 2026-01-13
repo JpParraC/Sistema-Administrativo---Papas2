@@ -277,113 +277,59 @@ const Compras = () => {
         return
       }
 
-      const total = detalles.reduce((acc, d) => acc + Number(d.tb_subtotal || 0), 0)
-      const proveedorNombre = detalles[0]?.tb_proveedor || 'Desconocido'
-      const fechaCompra = new Date(detalles[0]?.tb_fechcomp).toLocaleDateString('es-ES')
+      const total = detalles.reduce((acc, d) => acc + Number(d.subtotal || 0), 0)
+      const proveedorNombre = detalles[0]?.proveedor || 'Desconocido'
+      const fechaCompra = new Date(detalles[0]?.fecha_compra).toLocaleDateString('es-ES')
 
       const facturaHTML = `
-      <html>
-        <head>
-          <title>Factura #${idCompra}</title>
-          <style>
-            body {
-              font-family: 'Helvetica', Arial, sans-serif;
-              margin: 40px;
-              color: #333;
-            }
-            h2 {
-              text-align: center;
-              font-size: 28px;
-              margin-bottom: 5px;
-            }
-            h4 {
-              text-align: center;
-              font-weight: normal;
-              margin-top: 0;
-              color: #555;
-            }
-            .info {
-              margin-top: 20px;
-              margin-bottom: 20px;
-              width: 100%;
-              display: flex;
-              justify-content: space-between;
-            }
-            .info p {
-              margin: 5px 0;
-              font-size: 14px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-            }
-            th, td {
-              border: 1px solid #aaa;
-              padding: 10px;
-              text-align: left;
-            }
-            th {
-              background-color: #f7f7f7;
-              font-weight: bold;
-              text-align: center;
-            }
-            td {
-              text-align: center;
-            }
-            .total {
-              margin-top: 20px;
-              text-align: right;
-              font-size: 20px;
-              font-weight: bold;
-              border-top: 2px solid #333;
-              padding-top: 10px;
-            }
-            hr {
-              margin-top: 30px;
-              margin-bottom: 30px;
-              border: none;
-              border-top: 2px solid #eee;
-            }
-          </style>
-        </head>
-        <body>
-          <h2>FACTURA</h2>
-          <h4>Compra de Productos</h4>
-          <hr>
+    <html>
+      <head>
+        <title>Factura #${idCompra}</title>
+        <style>
+          body { font-family: Helvetica, Arial, sans-serif; margin: 40px; }
+          h2 { text-align: center; }
+          .info { display: flex; justify-content: space-between; margin: 20px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #aaa; padding: 10px; text-align: center; }
+          th { background: #f7f7f7; }
+          .total { margin-top: 20px; text-align: right; font-size: 18px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h2>FACTURA</h2>
 
-          <div class="info">
-            <p><strong>Compra #:</strong> ${idCompra}</p>
-            <p><strong>Proveedor:</strong> ${proveedorNombre}</p>
-            <p><strong>Fecha:</strong> ${fechaCompra}</p>
-          </div>
+        <div class="info">
+          <p><strong>Compra #:</strong> ${idCompra}</p>
+          <p><strong>Proveedor:</strong> ${proveedorNombre}</p>
+          <p><strong>Fecha:</strong> ${fechaCompra}</p>
+        </div>
 
-          <table>
-            <thead>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${detalles.map(d => `
               <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
+                <td>${d.producto}</td>
+                <td>${d.cantidad}</td>
+                <td>$${Number(d.precio_unitario).toFixed(2)}</td>
+                <td>$${Number(d.subtotal).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${detalles.map(d => `
-                <tr>
-                  <td>${d.nombre_producto}</td>
-                  <td>${d.tb_cantidad}</td>
-                  <td>$${Number(d.tb_precunic).toFixed(2)}</td>
-                  <td>$${Number(d.tb_subtotal).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+            `).join('')}
+          </tbody>
+        </table>
 
-          <div class="total">
-            Total: $${total.toFixed(2)}
-          </div>
-        </body>
-      </html>
+        <div class="total">
+          Total: $${total.toFixed(2)}
+        </div>
+      </body>
+    </html>
     `
 
       const ventana = window.open('', '_blank')
@@ -435,14 +381,14 @@ const Compras = () => {
     <>
       {/* CARD PRINCIPAL */}
       <CCard
-      style={{
-        backdropFilter: 'blur(16px)',
-        background: 'rgba(255,255,255,0.85)',
-        borderRadius: 24,
-        boxShadow: '0 25px 60px rgba(0,0,0,.15)',
-        border: '1px solid rgba(255, 255, 255, 1)',
-      }}
-    >
+        style={{
+          backdropFilter: 'blur(16px)',
+          background: 'rgba(255,255,255,0.85)',
+          borderRadius: 24,
+          boxShadow: '0 25px 60px rgba(0,0,0,.15)',
+          border: '1px solid rgba(255, 255, 255, 1)',
+        }}
+      >
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Compras</h5>
           <CButton color="primary" onClick={() => setVisible(true)}>

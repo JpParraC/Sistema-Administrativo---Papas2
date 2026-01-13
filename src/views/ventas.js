@@ -277,83 +277,139 @@ const Ventas = () => {
     setVisibleMsg(true)
   }
 
-const imprimirFacturaCompra = async (idCompra) => {
-  try {
-    const res = await fetch(`http://localhost:4000/api/compras/${idCompra}/detalle`)
-    if (!res.ok) throw new Error('Error al obtener la compra')
+  const imprimirFacturaVenta = async (idVenta) => {
+    try {
+      const res = await fetch(`http://localhost:4000/api/ventas/${idVenta}`)
+      if (!res.ok) throw new Error('Error al obtener la venta')
 
-    const detalles = await res.json()
-    if (!Array.isArray(detalles) || detalles.length === 0) {
-      showMessage('Atención', 'No hay detalles para esta compra', 'warning')
-      return
-    }
+      const data = await res.json()
+      const detalles = data.detalles
 
-    // Calcular total
-    const total = detalles.reduce((acc, d) => acc + Number(d.tb_subtotal || 0), 0)
+      if (!Array.isArray(detalles) || detalles.length === 0) {
+        showMessage('Atención', 'No hay detalles para esta venta', 'warning')
+        return
+      }
 
-    // Datos de cabecera
-    const proveedor = detalles[0]?.tb_proveedor || 'Desconocido'
-    const fechaCompra = new Date(detalles[0]?.tb_fechcomp).toLocaleDateString('es-ES')
+      const total = detalles.reduce(
+        (acc, d) => acc + Number(d.tb_subtota || 0),
+        0
+      )
 
-    const facturaHTML = `
-      <html>
-        <head>
-          <title>Factura #${idCompra}</title>
-          <style>
-            body { font-family: Arial; padding: 20px; }
-            h2 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background: #f2f2f2; }
-            .total { text-align: right; font-size: 18px; margin-top: 10px; }
-          </style>
-        </head>
-        <body>
-          <h2>FACTURA</h2>
+      const cliente = data.cliente
+      const fechaVenta = new Date(data.tb_fechvent).toLocaleDateString('es-ES')
 
-          <p><strong>Compra #:</strong> ${idCompra}</p>
-          <p><strong>Proveedor:</strong> ${proveedor}</p>
-          <p><strong>Fecha:</strong> ${fechaCompra}</p>
+      const facturaHTML = `
+    <html>
+      <head>
+        <title>Factura Venta #${idVenta}</title>
+        <style>
+          body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+          }
+          h2 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 5px;
+          }
+          h4 {
+            text-align: center;
+            font-weight: normal;
+            margin-top: 0;
+            color: #555;
+          }
+          .info {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+          }
+          .info p {
+            margin: 5px 0;
+            font-size: 14px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #aaa;
+            padding: 10px;
+            text-align: center;
+          }
+          th {
+            background-color: #f7f7f7;
+            font-weight: bold;
+          }
+          .total {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 20px;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+          }
+          hr {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            border: none;
+            border-top: 2px solid #eee;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>FACTURA</h2>
+        <h4>Venta de Productos</h4>
+        <hr>
 
-          <table>
-            <thead>
+        <div class="info">
+          <p><strong>Venta #:</strong> ${idVenta}</p>
+          <p><strong>Cliente:</strong> ${cliente}</p>
+          <p><strong>Fecha:</strong> ${fechaVenta}</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unitario</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${detalles.map(d => `
               <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
+                <td>${d.nombre_producto}</td>
+                <td>${d.tb_cantida}</td>
+                <td>$${Number(d.tb_precuni).toFixed(2)}</td>
+                <td>$${Number(d.tb_subtota).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${detalles.map(d => `
-                <tr>
-                  <td>${d.nombre_producto}</td>
-                  <td>${d.tb_cantidad}</td>
-                  <td>$${Number(d.tb_precunic).toFixed(2)}</td>
-                  <td>$${Number(d.tb_subtotal).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+            `).join('')}
+          </tbody>
+        </table>
 
-          <div class="total">
-            <strong>Total: $${total.toFixed(2)}</strong>
-          </div>
-        </body>
-      </html>
+        <div class="total">
+          Total: $${total.toFixed(2)}
+        </div>
+      </body>
+    </html>
     `
 
-    // Abrir nueva ventana y activar impresión
-    const ventana = window.open('', '_blank')
-    ventana.document.write(facturaHTML)
-    ventana.document.close()
-    ventana.print()
+      const ventana = window.open('', '_blank')
+      ventana.document.write(facturaHTML)
+      ventana.document.close()
+      ventana.print()
 
-  } catch (err) {
-    showMessage('Error', 'No se pudo imprimir la factura', 'danger')
-    console.error(err)
+    } catch (err) {
+      showMessage('Error', 'No se pudo imprimir la factura', 'danger')
+      console.error(err)
+    }
   }
-}
+
 
 
   /* ======================
@@ -376,98 +432,97 @@ const imprimirFacturaCompra = async (idCompra) => {
 
       <CCardBody>
         <CTable
-  bordered
-  hover
-  responsive
-  align="middle"
-  className="text-center"
->
-  <CTableHead color="light">
-    <CTableRow>
-      <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Cliente</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Fecha</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Total</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Estado</CTableHeaderCell>
-      <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
-    </CTableRow>
-  </CTableHead>
+          bordered
+          hover
+          responsive
+          align="middle"
+          className="text-center"
+        >
+          <CTableHead color="light">
+            <CTableRow>
+              <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Cliente</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Fecha</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Total</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Estado</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Acciones</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
 
-  <CTableBody>
-    {ventas.map(v => (
-      <CTableRow key={v.id}>
-        <CTableDataCell className="fw-semibold">
-          {v.id}
-        </CTableDataCell>
+          <CTableBody>
+            {ventas.map(v => (
+              <CTableRow key={v.id}>
+                <CTableDataCell className="fw-semibold">
+                  {v.id}
+                </CTableDataCell>
 
-        <CTableDataCell>
-          {v.cliente}
-        </CTableDataCell>
+                <CTableDataCell>
+                  {v.cliente}
+                </CTableDataCell>
 
-        <CTableDataCell>
-          {v.fecha}
-        </CTableDataCell>
+                <CTableDataCell>
+                  {v.fecha}
+                </CTableDataCell>
 
-        <CTableDataCell className="fw-semibold">
-          ${v.total.toFixed(2)}
-        </CTableDataCell>
+                <CTableDataCell className="fw-semibold">
+                  ${v.total.toFixed(2)}
+                </CTableDataCell>
 
-        <CTableDataCell>
-          <CBadge
-            color={estadoColors[v.estado] || 'secondary'}
-            className="px-3 py-1"
-          >
-            {v.estado}
-          </CBadge>
-        </CTableDataCell>
+                <CTableDataCell>
+                  <CBadge
+                    color={estadoColors[v.estado] || 'secondary'}
+                    className="px-3 py-1"
+                  >
+                    {v.estado}
+                  </CBadge>
+                </CTableDataCell>
 
-        <CTableDataCell>
-          <div className="d-flex justify-content-center gap-1">
+                <CTableDataCell>
+                  <div className="d-flex justify-content-center gap-1">
 
-            <CButton
-              size="sm"
-              color="info"
-              variant="ghost"
-              onClick={() => verDetalleVenta(v.id)}
-            >
-              Ver
-            </CButton>
+                    <CButton
+                      size="sm"
+                      color="info"
+                      variant="ghost"
+                      onClick={() => verDetalleVenta(v.id)}
+                    >
+                      Ver
+                    </CButton>
 
-            <CButton
-              size="sm"
-              color="warning"
-              variant="ghost"
-              onClick={() => editarVenta(v.id)}
-            >
-              Editar
-            </CButton>
+                    <CButton
+                      size="sm"
+                      color="warning"
+                      variant="ghost"
+                      onClick={() => editarVenta(v.id)}
+                    >
+                      Editar
+                    </CButton>
 
-            <CButton
-              size="sm"
-              color="danger"
-              variant="ghost"
-              onClick={() => eliminarVenta(v.id)}
-            >
-              Eliminar
-            </CButton>
+                    <CButton
+                      size="sm"
+                      color="danger"
+                      variant="ghost"
+                      onClick={() => eliminarVenta(v.id)}
+                    >
+                      Eliminar
+                    </CButton>
 
-            <CButton
-              size="sm"
-              color="dark"
-              variant="ghost"
-              onClick={() =>
-                window.open(`${API_URL}/ventas/${v.id}/factura`, '_blank')
-              }
-            >
-              PDF
-            </CButton>
+                    <CButton
+                      size="sm"
+                      color="dark"
+                      variant="ghost"
+                      onClick={() => imprimirFacturaVenta(v.id)}
+                    >
+                      Factura
+                    </CButton>
 
-          </div>
-        </CTableDataCell>
-      </CTableRow>
-    ))}
-  </CTableBody>
-</CTable>
+
+                  </div>
+                </CTableDataCell>
+              </CTableRow>
+            ))}
+          </CTableBody>
+        </CTable>
 
       </CCardBody>
 
