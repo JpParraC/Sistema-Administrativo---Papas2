@@ -198,16 +198,18 @@ const Compras = () => {
       const res = await fetch(`${API_COMPRAS}/${compra.id}/detalle`)
       const data = await res.json()
       const detalleMapeado = data.map((item) => {
-        const prod = productos.find((p) => p.id === Number(item.tb_idprodu))
+        const prod = productos.find((p) => p.nombre === item.producto)
+
         return {
-          producto_id: Number(item.tb_idprodu),
-          cantidad: Number(item.tb_cantidad),
-          precio_unitario_compra: Number(item.tb_precunic),
-          subtotal: Number(item.tb_subtotal),
-          unidad: item.unidad || prod?.unidad || '',
-          nombre: prod?.nombre || item.nombre_producto || '',
+          producto_id: prod?.id || '',
+          cantidad: Number(item.cantidad),
+          precio_unitario_compra: Number(item.precio_unitario),
+          subtotal: Number(item.subtotal),
+          unidad: prod?.unidad || '',
+          nombre: item.producto,
         }
       })
+
       setDetalleCompra(detalleMapeado)
       setEditVisible(true)
     } catch (error) {
