@@ -586,8 +586,12 @@ const Compras = () => {
         </CModalHeader>
         <CModalBody>
           <h5 className="text-start mb-3">
-            Total: ${detalleReal.reduce((acc, item) => acc + Number(item.tb_subtotal || 0), 0).toFixed(2)}
+            Total: $
+            {detalleReal
+              .reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
+              .toFixed(2)}
           </h5>
+
           <CTable bordered small>
             <CTableHead>
               <CTableRow>
@@ -600,13 +604,18 @@ const Compras = () => {
             <CTableBody>
               {detalleReal.map((item, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>{item.nombre_producto}</CTableDataCell>
-                  <CTableDataCell>{item.tb_cantidad}</CTableDataCell>
-                  <CTableDataCell>${item.tb_precunic}</CTableDataCell>
-                  <CTableDataCell>${item.tb_subtotal}</CTableDataCell>
+                  <CTableDataCell>{item.producto}</CTableDataCell>
+                  <CTableDataCell>{item.cantidad}</CTableDataCell>
+                  <CTableDataCell>
+                    ${Number(item.precio_unitario).toFixed(2)}
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    ${Number(item.subtotal).toFixed(2)}
+                  </CTableDataCell>
                 </CTableRow>
               ))}
             </CTableBody>
+
           </CTable>
         </CModalBody>
       </CModal>
