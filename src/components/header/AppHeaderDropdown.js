@@ -25,11 +25,6 @@ const AppHeaderDropdown = () => {
           Configuracion
         </CDropdownHeader>
 
-        <CDropdownItem href="#">
-          <CIcon icon={cilSettings} className="me-2" />
-          Ajustes
-        </CDropdownItem>
-
         <CDropdownDivider />
         <CDropdownItem
           href="#"
