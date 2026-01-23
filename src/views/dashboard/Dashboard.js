@@ -1,84 +1,114 @@
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-  CRow, CCol, CCard, CCardBody, CCardHeader, CButton, CBadge,
+  CRow, CCol, CCard, CCardBody, CCardHeader, CBadge,
   CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell,
   CProgress, CWidgetStatsA, CWidgetStatsC
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
   cilUser,
-  cilMoney,
   cilCart,
-  cilChartLine,
   cilFactory,
   cilPeople,
   cilClipboard,
   cilCalendar,
-  cilArrowBottom, // reemplazo de cilTrendingDown
+  cilArrowBottom,
 } from '@coreui/icons'
 
+const cardStyle = {
+  backdropFilter: 'blur(16px)',
+  background: 'rgba(255,255,255,0.95)',
+  borderRadius: 24,
+  boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+  border: '1px solid rgba(255,255,255,1)',
+}
+
 const Dashboard = () => {
-  // Simulación de datos resumen
-  const resumen = {
-    totalVentas: 37200,
-    totalCompras: 21500,
-    totalClientes: 22,
-    totalPersonal: 8,
-    totalInventario: 3950,
-    totalProduccion: 4,
-    balance: 15700,
-    ventasHoy: 1200,
-    comprasHoy: 800,
-  }
+  const [resumen, setResumen] = useState({
+    totalVentas: 0,
+    totalCompras: 0,
+    totalClientes: 0,
+    totalPersonal: 0,
+    totalInventario: 0,
+    totalProduccion: 0,
+    balance: 0,
+    ventasHoy: 0,
+    comprasHoy: 0,
+  })
 
-  // Simulación de ventas recientes
-  const ventasRecientes = [
-    { id: 1, cliente: 'Carlos Ramírez', fecha: '2025-07-08', total: 1200, estado: 'Completada' },
-    { id: 2, cliente: 'María López', fecha: '2025-07-08', total: 800, estado: 'Pendiente' },
-    { id: 3, cliente: 'Cliente Tres', fecha: '2025-07-07', total: 950, estado: 'Completada' },
-  ]
+  const [ventasRecientes, setVentasRecientes] = useState([])
+  const [comprasRecientes, setComprasRecientes] = useState([])
+  const [inventarioBajo, setInventarioBajo] = useState([])
+  const [produccionActiva, setProduccionActiva] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Simulación de compras recientes
-  const comprasRecientes = [
-    { id: 1, proveedor: 'AgroFert', fecha: '2025-07-08', total: 600, estado: 'Pagada' },
-    { id: 2, proveedor: 'Semillas S.A.', fecha: '2025-07-07', total: 1200, estado: 'Pendiente' },
-  ]
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/dashboard')
+        if (!response.ok) throw new Error('Error al cargar datos del dashboard')
+        const data = await response.json()
 
-  // Simulación de inventario bajo
-  const inventarioBajo = [
-    { id: 1, producto: 'Papa Negra', cantidad: 120 },
-    { id: 2, producto: 'Papa Blanca', cantidad: 80 },
-  ]
+        // Resumen
+        setResumen({
+          totalVentas: Number(data.resumen.totalVentas),
+          totalCompras: Number(data.resumen.totalCompras),
+          totalClientes: data.resumen.totalClientes,
+          totalPersonal: data.resumen.totalPersonal,
+          totalInventario: Number(data.resumen.totalInventario),
+          totalProduccion: data.resumen.totalProduccion,
+          balance: Number(data.resumen.balance),
+          ventasHoy: Number(data.resumen.ventasHoy),
+          comprasHoy: Number(data.resumen.comprasHoy),
+        })
 
-  // Simulación de producción activa
-  const produccionActiva = [
-    { id: 1, producto: 'Papa Negra', fecha_siembra: '2025-05-01', fecha_cosecha: '2025-08-01', responsable: 'Juan Pérez' },
-    { id: 2, producto: 'Papa Blanca', fecha_siembra: '2025-06-10', fecha_cosecha: '2025-09-10', responsable: 'Ana Gómez' },
-  ]
+        // Ventas recientes
+        setVentasRecientes(data.ventasRecientes.map(v => ({
+          id: v.tb_idventa,
+          cliente: v.cliente,
+          fecha: new Date(v.fecha).toLocaleDateString(),
+          total: Number(v.total),
+          estado: v.estado === 'Pagada' ? 'Completada' : v.estado
+        })))
 
-  // Simulación de balance mensual
-  const balanceMensual = [
-    { mes: 'Enero', ingresos: 8000, egresos: 5000 },
-    { mes: 'Febrero', ingresos: 9000, egresos: 6000 },
-    { mes: 'Marzo', ingresos: 11000, egresos: 7000 },
-    { mes: 'Abril', ingresos: 12000, egresos: 8000 },
-    { mes: 'Mayo', ingresos: 9500, egresos: 6500 },
-    { mes: 'Junio', ingresos: 10500, egresos: 7000 },
-    { mes: 'Julio', ingresos: 12000, egresos: 8000 },
-  ]
+        // Compras recientes
+        setComprasRecientes(data.comprasRecientes.map(c => ({
+          id: c.tb_idcompra,
+          proveedor: c.proveedor,
+          fecha: new Date(c.fecha).toLocaleDateString(),
+          total: Number(c.total),
+          estado: c.estado === 'PAGADA' ? 'Pagada' : c.estado
+        })))
+
+        // Inventario bajo
+        setInventarioBajo(data.inventarioBajo.map(i => ({
+          id: i.id,
+          producto: i.producto,
+          cantidad: Number(i.cantidad)
+        })))
+
+        // Por ahora vacíos
+        setProduccionActiva([])
+      } catch (err) {
+        console.error('Error cargando dashboard:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboard()
+  }, [])
+
+  if (loading) return <div>Cargando dashboard...</div>
 
   return (
     <div>
+      {/* Widgets principales */}
       <CRow className="mb-4">
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsA
-            className="mb-3"
             color="primary"
-            value={<>
-              ${resumen.totalVentas.toLocaleString()}
-              <span className="fs-6 fw-normal ms-2">Ventas</span>
-            </>}
+            value={<>{`$${resumen.totalVentas.toLocaleString()}`}<span className="fs-6 fw-normal ms-2">Ventas</span></>}
             title="Total Ventas"
             icon={<CIcon icon={cilCart} height={36} />}
             chart={<CProgress thin color="primary" value={80} />}
@@ -86,12 +116,8 @@ const Dashboard = () => {
         </CCol>
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsA
-            className="mb-3"
             color="success"
-            value={<>
-              ${resumen.totalCompras.toLocaleString()}
-              <span className="fs-6 fw-normal ms-2">Compras</span>
-            </>}
+            value={<>{`$${resumen.totalCompras.toLocaleString()}`}<span className="fs-6 fw-normal ms-2">Compras</span></>}
             title="Total Compras"
             icon={<CIcon icon={cilFactory} height={36} />}
             chart={<CProgress thin color="success" value={60} />}
@@ -99,12 +125,8 @@ const Dashboard = () => {
         </CCol>
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsA
-            className="mb-3"
             color="info"
-            value={<>
-              {resumen.totalClientes}
-              <span className="fs-6 fw-normal ms-2">Clientes</span>
-            </>}
+            value={<>{resumen.totalClientes}<span className="fs-6 fw-normal ms-2">Clientes</span></>}
             title="Clientes Registrados"
             icon={<CIcon icon={cilPeople} height={36} />}
             chart={<CProgress thin color="info" value={40} />}
@@ -112,12 +134,8 @@ const Dashboard = () => {
         </CCol>
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsA
-            className="mb-3"
             color="warning"
-            value={<>
-              {resumen.totalPersonal}
-              <span className="fs-6 fw-normal ms-2">Personal</span>
-            </>}
+            value={<>{resumen.totalPersonal}<span className="fs-6 fw-normal ms-2">Personal</span></>}
             title="Personal Activo"
             icon={<CIcon icon={cilUser} height={36} />}
             chart={<CProgress thin color="warning" value={30} />}
@@ -125,10 +143,10 @@ const Dashboard = () => {
         </CCol>
       </CRow>
 
+      {/* Widgets secundarios */}
       <CRow className="mb-4">
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsC
-            className="mb-3"
             color="secondary"
             icon={<CIcon icon={cilClipboard} height={36} />}
             value={resumen.totalInventario}
@@ -137,7 +155,6 @@ const Dashboard = () => {
         </CCol>
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsC
-            className="mb-3"
             color="info"
             icon={<CIcon icon={cilCalendar} height={36} />}
             value={resumen.totalProduccion}
@@ -146,17 +163,14 @@ const Dashboard = () => {
         </CCol>
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsC
-            className="mb-3"
             color="success"
             icon={<CIcon icon={cilArrowBottom} height={36} />}
             value={`$${resumen.balance.toLocaleString()}`}
             title="Balance Actual"
           />
         </CCol>
-
         <CCol xs={12} md={6} xl={3}>
           <CWidgetStatsC
-            className="mb-3"
             color="danger"
             icon={<CIcon icon={cilArrowBottom} height={36} />}
             value={`$${resumen.comprasHoy.toLocaleString()}`}
@@ -165,17 +179,10 @@ const Dashboard = () => {
         </CCol>
       </CRow>
 
+      {/* Ventas recientes */}
       <CRow>
         <CCol md={6} className="mb-4">
-          <CCard
-  style={{
-    backdropFilter: 'blur(16px)',
-    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
-    borderRadius: 24,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-    border: '1px solid rgba(255,255,255,1)',
-  }}
->
+          <CCard style={cardStyle}>
             <CCardHeader className="fw-bold">Ventas Recientes</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -189,12 +196,12 @@ const Dashboard = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {ventasRecientes.map((v) => (
+                  {ventasRecientes.map(v => (
                     <CTableRow key={v.id}>
                       <CTableDataCell>{v.id}</CTableDataCell>
                       <CTableDataCell>{v.cliente}</CTableDataCell>
                       <CTableDataCell>{v.fecha}</CTableDataCell>
-                      <CTableDataCell>${v.total}</CTableDataCell>
+                      <CTableDataCell>${v.total.toLocaleString()}</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={v.estado === 'Completada' ? 'success' : 'warning'}>
                           {v.estado}
@@ -207,16 +214,10 @@ const Dashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
+
+        {/* Compras recientes */}
         <CCol md={6} className="mb-4">
-          <CCard
-  style={{
-    backdropFilter: 'blur(16px)',
-    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
-    borderRadius: 24,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-    border: '1px solid rgba(255,255,255,1)',
-  }}
->
+          <CCard style={cardStyle}>
             <CCardHeader className="fw-bold">Compras Recientes</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -230,12 +231,12 @@ const Dashboard = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {comprasRecientes.map((c) => (
+                  {comprasRecientes.map(c => (
                     <CTableRow key={c.id}>
                       <CTableDataCell>{c.id}</CTableDataCell>
                       <CTableDataCell>{c.proveedor}</CTableDataCell>
                       <CTableDataCell>{c.fecha}</CTableDataCell>
-                      <CTableDataCell>${c.total}</CTableDataCell>
+                      <CTableDataCell>${c.total.toLocaleString()}</CTableDataCell>
                       <CTableDataCell>
                         <CBadge color={c.estado === 'Pagada' ? 'success' : 'warning'}>
                           {c.estado}
@@ -250,17 +251,10 @@ const Dashboard = () => {
         </CCol>
       </CRow>
 
+      {/* Inventario bajo */}
       <CRow>
         <CCol md={6} className="mb-4">
-         <CCard
-  style={{
-    backdropFilter: 'blur(16px)',
-    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
-    borderRadius: 24,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-    border: '1px solid rgba(255,255,255,1)',
-  }}
->
+          <CCard style={cardStyle}>
             <CCardHeader className="fw-bold">Inventario Bajo</CCardHeader>
             <CCardBody>
               <CTable hover responsive align="middle">
@@ -271,93 +265,12 @@ const Dashboard = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {inventarioBajo.map((i) => (
+                  {inventarioBajo.map(i => (
                     <CTableRow key={i.id}>
                       <CTableDataCell>{i.producto}</CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color={i.cantidad < 100 ? 'danger' : 'warning'}>
+                        <CBadge color={i.cantidad <= 0 ? 'danger' : 'warning'}>
                           {i.cantidad}
-                        </CBadge>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </CCardBody>
-          </CCard>
-        </CCol>
-        <CCol md={6} className="mb-4">
-          <CCard
-  style={{
-    backdropFilter: 'blur(16px)',
-    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
-    borderRadius: 24,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-    border: '1px solid rgba(255,255,255,1)',
-  }}
->
-            <CCardHeader className="fw-bold">Producción Activa</CCardHeader>
-            <CCardBody>
-              <CTable hover responsive align="middle">
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>Producto</CTableHeaderCell>
-                    <CTableHeaderCell>Siembra</CTableHeaderCell>
-                    <CTableHeaderCell>Cosecha</CTableHeaderCell>
-                    <CTableHeaderCell>Responsable</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {produccionActiva.map((p) => (
-                    <CTableRow key={p.id}>
-                      <CTableDataCell>{p.producto}</CTableDataCell>
-                      <CTableDataCell>{p.fecha_siembra}</CTableDataCell>
-                      <CTableDataCell>{p.fecha_cosecha}</CTableDataCell>
-                      <CTableDataCell>{p.responsable}</CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-
-      <CRow>
-        <CCol md={12} className="mb-4">
-          <CCard
-  style={{
-    backdropFilter: 'blur(16px)',
-    background: 'rgba(255,255,255,0.95)', // más blanco para que los campos resalten
-    borderRadius: 24,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
-    border: '1px solid rgba(255,255,255,1)',
-  }}
->
-            <CCardHeader className="fw-bold">Balance Mensual</CCardHeader>
-            <CCardBody>
-              <CTable hover responsive align="middle">
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell>Mes</CTableHeaderCell>
-                    <CTableHeaderCell>Ingresos</CTableHeaderCell>
-                    <CTableHeaderCell>Egresos</CTableHeaderCell>
-                    <CTableHeaderCell>Balance</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {balanceMensual.map((b, idx) => (
-                    <CTableRow key={idx}>
-                      <CTableDataCell>{b.mes}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color="success">${b.ingresos.toLocaleString()}</CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color="danger">${b.egresos.toLocaleString()}</CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color={b.ingresos - b.egresos >= 0 ? 'info' : 'danger'}>
-                          ${b.ingresos - b.egresos}
                         </CBadge>
                       </CTableDataCell>
                     </CTableRow>
