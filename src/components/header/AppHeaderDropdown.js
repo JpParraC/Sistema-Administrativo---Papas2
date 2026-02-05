@@ -1,7 +1,6 @@
 import React from 'react'
 import {
   CAvatar,
-  CBadge,
   CDropdown,
   CDropdownDivider,
   CDropdownHeader,
@@ -9,7 +8,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import { cilAccountLogout, cilSettings } from '@coreui/icons'
+import { cilAccountLogout } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
 import avatar8 from './../../assets/images/avatars/aa.png'
@@ -17,15 +16,28 @@ import avatar8 from './../../assets/images/avatars/aa.png'
 const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={avatar8} size="md" />
+      <CDropdownToggle
+        placement="bottom-end"
+        caret={false}
+        className="py-2 pe-3"
+      >
+        <CAvatar
+          src={avatar8}
+          size="xl"
+          style={{
+            width: '55px',
+            height: '20px',
+          }}
+        />
       </CDropdownToggle>
+
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
-          Configuracion
+          Configuración
         </CDropdownHeader>
 
         <CDropdownDivider />
+
         <CDropdownItem
           href="#"
           onClick={() => {

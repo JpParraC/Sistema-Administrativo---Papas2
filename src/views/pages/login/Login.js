@@ -8,14 +8,13 @@ import {
   CFormInput,
   CInputGroup,
   CInputGroupText,
-  CRow,
-  CCol,
-  CAvatar,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilLeaf } from '@coreui/icons'
+import { cilLockLocked, cilUser } from '@coreui/icons'
 import Swal from 'sweetalert2'
-import fondoLogin from 'src/assets/images/fondologin.jpg'
+
+// 👉 TU LOGO
+import logo from 'src/assets/images/log.png'
 
 const Login = () => {
   const [loginUsername, setLoginUsername] = useState('')
@@ -23,23 +22,23 @@ const Login = () => {
   const [loginError, setLoginError] = useState('')
   const API_BASE = 'http://localhost:4000/api'
 
- useEffect(() => {
-  document.body.style.margin = '0'
-  document.body.style.height = '100vh'
-  document.body.style.background = `
-    linear-gradient(135deg, rgba(15,23,42,.75), rgba(15,23,42,.55)),
-    url(https://images.unsplash.com/photo-1500382017468-9049fed747ef) center / cover no-repeat
-  `
-  document.body.style.backgroundAttachment = 'fixed'
+  useEffect(() => {
+    document.body.style.margin = '0'
+    document.body.style.height = '100vh'
+    document.body.style.background = `
+      linear-gradient(135deg, rgba(15,23,42,.75), rgba(15,23,42,.55)),
+      url(https://images.unsplash.com/photo-1500382017468-9049fed747ef) center / cover no-repeat
+    `
+    document.body.style.backgroundAttachment = 'fixed'
 
-  return () => {
-    // 🔥 limpiar cuando sales del login
-    document.body.style.background = ''
-  }
-}, [])
+    return () => {
+      document.body.style.background = ''
+    }
+  }, [])
 
   const handleLogin = async (e) => {
     e.preventDefault()
+
     if (!loginUsername || !loginPassword) {
       setLoginError('Completa todos los campos')
       return
@@ -49,8 +48,12 @@ const Login = () => {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: loginUsername, password: loginPassword }),
+        body: JSON.stringify({
+          usuario: loginUsername,
+          password: loginPassword,
+        }),
       })
+
       const data = await res.json()
 
       if (!res.ok) {
@@ -69,12 +72,14 @@ const Login = () => {
         showConfirmButton: false,
       })
 
-      setTimeout(() => (window.location.href = '/#/dashboard'), 1200)
+      setTimeout(() => {
+        window.location.href = '/#/dashboard'
+      }, 1200)
     } catch {
       setLoginError('Error de conexión')
     }
   }
-//https://images.unsplash.com/photo-1464226184884-fa280b87c399
+
   return (
     <div
       style={{
@@ -100,26 +105,37 @@ const Login = () => {
           border: '1px solid rgba(255,255,255,.2)',
         }}
       >
-        <CCardBody style={{ padding: '2.5rem' }}>
-          <div className="text-center mb-4">
-            <CAvatar
-              size="xl"
+        {/* 👇 MENOS ESPACIO ARRIBA */}
+        <CCardBody style={{ padding: '1.2rem 2.5rem 2.5rem' }}>
+          {/* 👇 LOGO BIEN ABAJO */}
+          <div className="text-center">
+            <img
+              src={logo}
+              alt="AgroControl"
               style={{
-                background: 'linear-gradient(135deg,#3b82f6,#06b6d4)',
-                boxShadow: '0 10px 25px rgba(233, 137, 64, 0.6)',
-                marginBottom: 14,
+                maxWidth: 220,
+                width: '150%',
+                   // 🔥 ESTO SÍ LO BAJA
+                filter: 'drop-shadow(0 6px 14px rgba(0,0,0,.35))',
+              }}
+            />
+
+            <h2
+              style={{
+                color: '#fff',
+                fontWeight: 700,
+                marginBottom: 2,
               }}
             >
-              <CIcon icon={cilLeaf} height={34} />
-            </CAvatar>
+              AgroControl
+            </h2>
 
-            <h2 style={{ color: '#fff', fontWeight: 700 }}>AgroControl</h2>
             <small style={{ color: '#cbd5f5' }}>
               Gestión inteligente de producción
             </small>
           </div>
 
-          <CForm onSubmit={handleLogin}>
+          <CForm onSubmit={handleLogin} style={{ marginTop: 24 }}>
             <CInputGroup className="mb-3">
               <CInputGroupText style={iconStyle}>
                 <CIcon icon={cilUser} />
@@ -167,7 +183,6 @@ const Login = () => {
         </CCardBody>
       </CCard>
 
-      {/* animación */}
       <style>
         {`
           @keyframes float {

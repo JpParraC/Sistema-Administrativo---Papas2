@@ -9,15 +9,14 @@ import {
   CSidebarHeader,
   CSidebarToggler,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
-
 // sidebar nav config
 import navigation from '../_nav'
+
+// Logo PNG
+import Logo from 'src/assets/images/log.png'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
@@ -38,25 +37,45 @@ const AppSidebar = () => {
         dispatch({ type: 'set', sidebarShow: visible })
       }}
     >
-      <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+      {/* Sidebar Header con logo pegado arriba y abajo */}
+      <CSidebarHeader
+        className="border-bottom d-flex align-items-center justify-content-center"
+        style={{
+          paddingTop: 0,
+          paddingBottom: 0,
+          height: 'auto', // se ajusta al logo
+        }}
+      >
+        <CSidebarBrand
+          to="/"
+          className="d-flex align-items-center justify-content-center"
+          style={{
+            padding: 0,
+          }}
+        >
+          <img
+            src={Logo}
+            alt="Logo"
+            style={{
+              width: '190px',   // tamaño deseado
+              height: 'auto',
+              objectFit: 'contain',
+              display: 'block',  // elimina espacio inferior
+            }}
+          />
         </CSidebarBrand>
+
         <CCloseButton
           className="d-lg-none"
           dark
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} />
-      <CSidebarFooter className="border-top d-none d-lg-flex">
-        <CSidebarToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-        />
-      </CSidebarFooter>
+
+      {/* Navegación */}
+      <AppSidebarNav items={navigation} />      
     </CSidebar>
   )
 }
 
- export default React.memo(AppSidebar)
+export default React.memo(AppSidebar)
