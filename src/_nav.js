@@ -44,12 +44,21 @@ const _nav = [
     icon: <CIcon icon={cilCart} customClassName="nav-icon" />,
   },
 
+    
+  {
+    component: CNavItem,
+    name: 'Producción',
+    to: '/produccion',
+    icon: <CIcon icon={cilFactory} customClassName="nav-icon" />,
+  },
+
   {
     component: CNavItem,
     name: 'Clientes',
     to: '/clientes',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
   },
+
   
   {
     component: CNavItem,
@@ -62,12 +71,6 @@ const _nav = [
     name: 'Inventario',
     to: '/inventario',
     icon: <CIcon icon={cilStorage} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavItem,
-    name: 'Producción',
-    to: '/produccion',
-    icon: <CIcon icon={cilFactory} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
